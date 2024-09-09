@@ -26,6 +26,10 @@ from telegram.ext import (
     filters
 )
 from telegram.constants import ParseMode, ChatAction
+# from telethon import TelegramClient, connection, utils 
+# import telethon
+# from tg_file_id.file_id import FileId
+
 
 import config
 import database
@@ -39,6 +43,8 @@ logger = logging.getLogger(__name__)
 
 user_semaphores = {}
 user_tasks = {}
+
+# telegram_client = TelegramClient('anon', config.telegram_api_id, config.telegram_api_hash)
 
 HELP_MESSAGE = """Commands:
 ⚪ /retry – Regenerate last bot answer
@@ -523,12 +529,92 @@ async def voice_message_handle(update: Update, context: CallbackContext):
 
     transcribed_text = await openai_utils.transcribe_audio(buf)
     text = f"🎤: <i>{transcribed_text}</i>"
+
     await update.message.reply_text(text, parse_mode=ParseMode.HTML)
 
     # update n_transcribed_seconds
     db.set_user_attribute(user_id, "n_transcribed_seconds", voice.duration + db.get_user_attribute(user_id, "n_transcribed_seconds"))
 
     await message_handle(update, context, message=transcribed_text)
+
+async def audio_message_handle(update: Update, context: CallbackContext):
+    # check if bot was mentioned (for group chats)
+    if not await is_bot_mentioned(update, context):
+        return
+
+    await register_user_if_not_exists(update, context, update.message.from_user)
+    if await is_previous_message_not_answered_yet(update, context): return
+
+    user_id = update.message.from_user.id
+    db.set_user_attribute(user_id, "last_interaction", datetime.now())
+
+    audio = update.message.audio 
+    if audio.file_size < 20*1024*1024:
+        audio_file = await context.bot.get_file(audio.file_id)
+    else: 
+        update.message.reply_text(f"files > 20mb not supported yet")
+
+
+    # store file in memory, not on disk
+    buf = io.BytesIO()
+    await audio_file.download_to_memory(buf)
+    buf.name = "audio.oga"  # file extension is required
+    buf.seek(0)  # move cursor to the beginning of the buffer
+
+    transcribed_text = await openai_utils.transcribe_audio(buf)
+    text = f"🎤: <i>{transcribed_text}</i>"
+    if len (text) < 500: 
+        await update.message.reply_text(text, parse_mode=ParseMode.HTML)
+    else:
+        with open("/tmp/"+audio.file_name +".txt", 'w') as file:
+            file.write(transcribed_text)
+        await update.message.reply_document(file.name,  parse_mode=ParseMode.HTML, caption= audio.file_name +".txt" ) 
+
+    # update n_transcribed_seconds
+    db.set_user_attribute(user_id, "n_transcribed_seconds", audio.duration + db.get_user_attribute(user_id, "n_transcribed_seconds"))
+
+    await message_handle(update, context, message=transcribed_text)
+
+async def textdoc_message_handle(update: Update, context: CallbackContext):
+    # check if bot was mentioned (for group chats)
+    if not await is_bot_mentioned(update, context):
+        return
+
+    await register_user_if_not_exists(update, context, update.message.from_user)
+    if await is_previous_message_not_answered_yet(update, context): return
+
+    user_id = update.message.from_user.id
+    db.set_user_attribute(user_id, "last_interaction", datetime.now())
+
+    doc = update.message.document 
+    if doc.file_size < 20*1024*1024:
+        doc_file = await context.bot.get_file(doc.file_id)
+    else: 
+        update.message.reply_text(f"files > 20mb not supported yet")
+
+
+    # store file in memory, not on disk
+    buf = io.BytesIO()
+    await doc_file.download_to_memory(buf)
+    buf.name = "doc.txt"  # file extension is required
+    buf.seek(0)  # move cursor to the beginning of the buffer
+    byte_str = buf.read()
+
+    # Convert to a "unicode" object
+    text = byte_str.decode('UTF-8')  # Or use the encoding you expect
+    # transcribed_text = await openai_utils.transcribe_audio(buf)
+    # text = f"🎤: <i>{transcribed_text}</i>"
+    # if len (text) < 500: 
+    #     await update.message.reply_text(text, parse_mode=ParseMode.HTML)
+    # else:
+    #     with open("/tmp/"+audio.file_name +".txt", 'w') as file:
+    #         file.write(transcribed_text)
+    #     await update.message.reply_document(file.name,  parse_mode=ParseMode.HTML, caption= audio.file_name +".txt" ) 
+
+    # update n_transcribed_seconds
+    # db.set_user_attribute(user_id, "n_transcribed_seconds", doc.file_size + db.get_user_attribute(user_id, "n_tokens"))
+
+    await message_handle(update, context, message=text)
 
 
 async def generate_image_handle(update: Update, context: CallbackContext, message=None):
@@ -845,16 +931,20 @@ def run_bot() -> None:
     application.add_handler(CommandHandler("start", start_handle, filters=user_filter))
     application.add_handler(CommandHandler("help", help_handle, filters=user_filter))
     application.add_handler(CommandHandler("help_group_chat", help_group_chat_handle, filters=user_filter))
-
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND & user_filter, message_handle))
+    application.add_handler(MessageHandler(filters.Document.TEXT & user_filter, textdoc_message_handle))
+
     application.add_handler(MessageHandler(filters.PHOTO & ~filters.COMMAND & user_filter, message_handle))
     application.add_handler(MessageHandler(filters.VIDEO & ~filters.COMMAND & user_filter, unsupport_message_handle))
-    application.add_handler(MessageHandler(filters.Document.ALL & ~filters.COMMAND & user_filter, unsupport_message_handle))
+    application.add_handler(MessageHandler(filters.VOICE & user_filter, voice_message_handle))
+    application.add_handler(MessageHandler(filters.AUDIO & user_filter, audio_message_handle))
+    application.add_handler(MessageHandler(filters.Document.ALL & ~filters.COMMAND & ~filters.Document.TEXT & user_filter, unsupport_message_handle))
+
     application.add_handler(CommandHandler("retry", retry_handle, filters=user_filter))
     application.add_handler(CommandHandler("new", new_dialog_handle, filters=user_filter))
     application.add_handler(CommandHandler("cancel", cancel_handle, filters=user_filter))
 
-    application.add_handler(MessageHandler(filters.VOICE & user_filter, voice_message_handle))
+    
 
     application.add_handler(CommandHandler("mode", show_chat_modes_handle, filters=user_filter))
     application.add_handler(CallbackQueryHandler(show_chat_modes_callback_handle, pattern="^show_chat_modes"))
@@ -868,6 +958,7 @@ def run_bot() -> None:
     application.add_error_handler(error_handle)
 
     # start the bot
+    logger.info('bot started...')
     application.run_polling()
 
 

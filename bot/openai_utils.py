@@ -11,6 +11,8 @@ import openai
 openai.api_key = config.openai_api_key
 if config.openai_api_base is not None:
     openai.api_base = config.openai_api_base
+if config.openai_api_organization is not None:
+    openai.organization = config.openai_api_organization
 logger = logging.getLogger(__name__)
 
 
