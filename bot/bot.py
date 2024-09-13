@@ -464,9 +464,8 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
                 text = f"✍️ <i>Note:</i> Your current dialog is too long, so <b>{n_first_dialog_messages_removed} first messages</b> were removed from the context.\n Send /new command to start new dialog"
             await update.message.reply_text(text, parse_mode=ParseMode.HTML)
 
-    async with user_semaphores[user_id]:
-        if current_model == "gpt-4-vision-preview" or current_model == "gpt-4o" or update.message.photo is not None and len(update.message.photo) > 0:
-
+    async with user_semaphores[user_id]: 
+        if len(update.message.photo) > 0: # current_model == "gpt-4-vision-preview" or current_model == "gpt-4o" or update.message.photo is not None and             
             logger.error(current_model)
             # What is this? ^^^
 
@@ -551,9 +550,9 @@ async def audio_message_handle(update: Update, context: CallbackContext):
     audio = update.message.audio 
     if audio.file_size < 20*1024*1024:
         audio_file = await context.bot.get_file(audio.file_id)
+        await update.message.reply_text(f"starting processing...")
     else: 
-        update.message.reply_text(f"files > 20mb not supported yet")
-
+        await update.message.reply_text(f"files > 20mb not supported yet")
 
     # store file in memory, not on disk
     buf = io.BytesIO()
@@ -563,6 +562,7 @@ async def audio_message_handle(update: Update, context: CallbackContext):
 
     transcribed_text = await openai_utils.transcribe_audio(buf)
     text = f"🎤: <i>{transcribed_text}</i>"
+    await update.message.reply_text(f"text transcribed, prepare result...")
     if len (text) < 500: 
         await update.message.reply_text(text, parse_mode=ParseMode.HTML)
     else:
@@ -573,7 +573,7 @@ async def audio_message_handle(update: Update, context: CallbackContext):
     # update n_transcribed_seconds
     db.set_user_attribute(user_id, "n_transcribed_seconds", audio.duration + db.get_user_attribute(user_id, "n_transcribed_seconds"))
 
-    await message_handle(update, context, message=transcribed_text)
+    await message_handle(update, context, message=update.message.caption_markdown_v2_urled+" " + transcribed_text)
 
 async def textdoc_message_handle(update: Update, context: CallbackContext):
     # check if bot was mentioned (for group chats)
@@ -589,8 +589,9 @@ async def textdoc_message_handle(update: Update, context: CallbackContext):
     doc = update.message.document 
     if doc.file_size < 20*1024*1024:
         doc_file = await context.bot.get_file(doc.file_id)
+        await update.message.reply_text(f"starting processing...")
     else: 
-        update.message.reply_text(f"files > 20mb not supported yet")
+        await update.message.reply_text(f"files > 20mb not supported yet")
 
 
     # store file in memory, not on disk
@@ -602,19 +603,10 @@ async def textdoc_message_handle(update: Update, context: CallbackContext):
 
     # Convert to a "unicode" object
     text = byte_str.decode('UTF-8')  # Or use the encoding you expect
-    # transcribed_text = await openai_utils.transcribe_audio(buf)
-    # text = f"🎤: <i>{transcribed_text}</i>"
-    # if len (text) < 500: 
-    #     await update.message.reply_text(text, parse_mode=ParseMode.HTML)
-    # else:
-    #     with open("/tmp/"+audio.file_name +".txt", 'w') as file:
-    #         file.write(transcribed_text)
-    #     await update.message.reply_document(file.name,  parse_mode=ParseMode.HTML, caption= audio.file_name +".txt" ) 
+   
 
-    # update n_transcribed_seconds
-    # db.set_user_attribute(user_id, "n_transcribed_seconds", doc.file_size + db.get_user_attribute(user_id, "n_tokens"))
-
-    await message_handle(update, context, message=text)
+    #TODO - add checks ishave variants of caption.***
+    await message_handle(update, context, message= update.message.caption_markdown_v2_urled+" " + text)
 
 
 async def generate_image_handle(update: Update, context: CallbackContext, message=None):
