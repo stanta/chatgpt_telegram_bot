@@ -66,6 +66,7 @@ class Database:
             "chat_mode": self.get_user_attribute(user_id, "current_chat_mode"),
             "start_time": datetime.now(),
             "model": self.get_user_attribute(user_id, "current_model"),
+            "thread_id": "",
             "messages": []
         }
 

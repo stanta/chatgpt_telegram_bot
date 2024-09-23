@@ -1,0 +1,6 @@
+python-telegram-bot[rate-limiter]
+openai
+tiktoken
+PyYAML
+pymongo
+python-dotenv

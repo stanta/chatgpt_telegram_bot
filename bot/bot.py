@@ -34,6 +34,7 @@ from telegram.constants import ParseMode, ChatAction
 import config
 import database
 import openai_utils
+import openai_assistant_utils
 
 import base64
 
@@ -396,9 +397,9 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
                 "markdown": ParseMode.MARKDOWN
             }[config.chat_modes[chat_mode]["parse_mode"]]
 
-            chatgpt_instance = openai_utils.ChatGPT(model=current_model)
+            chatgpt_instance = openai_assistant_utils.ChatGPT(model=current_model)
             if config.enable_message_streaming:
-                gen = chatgpt_instance.send_message_stream(_message, dialog_messages=dialog_messages, chat_mode=chat_mode)
+                gen =  chatgpt_instance.send_message_stream(_message, user_id,  dialog_messages=dialog_messages, chat_mode=chat_mode)
             else:
                 answer, (n_input_tokens, n_output_tokens), n_first_dialog_messages_removed = await chatgpt_instance.send_message(
                     _message,
@@ -644,7 +645,8 @@ async def new_dialog_handle(update: Update, context: CallbackContext):
 
     user_id = update.message.from_user.id
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
-    db.set_user_attribute(user_id, "current_model", "gpt-3.5-turbo")
+    if db.get_user_attribute(user_id, "current_model") not in  config.models["available_text_models"]:
+        db.set_user_attribute(user_id,  config.models["available_text_models"][0] ) 
 
     db.start_new_dialog(user_id)
     await update.message.reply_text("Starting new dialog ✅")
