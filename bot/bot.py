@@ -475,6 +475,9 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
             task = asyncio.create_task(
                 _vision_message_handle_fn(update, context, use_new_dialog_timeout=use_new_dialog_timeout)
             )
+        #TODO 
+        # elif if len(update.message.audio) > 0: 
+        # elif if len(update.message.document) > 0: 
         else:
             task = asyncio.create_task(
                 message_handle_fn()
@@ -572,8 +575,10 @@ async def audio_message_handle(update: Update, context: CallbackContext):
 
     # update n_transcribed_seconds
     db.set_user_attribute(user_id, "n_transcribed_seconds", audio.duration + db.get_user_attribute(user_id, "n_transcribed_seconds"))
+    
+    capt =  "" if update.message.caption is None else update.message.caption
 
-    await message_handle(update, context, message=update.message.caption_markdown_v2_urled+" " + transcribed_text)
+    await message_handle(update, context, message= capt+" " + transcribed_text)
 
 async def textdoc_message_handle(update: Update, context: CallbackContext):
     # check if bot was mentioned (for group chats)
@@ -604,9 +609,8 @@ async def textdoc_message_handle(update: Update, context: CallbackContext):
     # Convert to a "unicode" object
     text = byte_str.decode('UTF-8')  # Or use the encoding you expect
    
-
-    #TODO - add checks ishave variants of caption.***
-    await message_handle(update, context, message= update.message.caption_markdown_v2_urled+" " + text)
+    capt =  "" if update.message.caption is None else update.message.caption
+    await message_handle(update, context, message= capt +" " + text)
 
 
 async def generate_image_handle(update: Update, context: CallbackContext, message=None):
