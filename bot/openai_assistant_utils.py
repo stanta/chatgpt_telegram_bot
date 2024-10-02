@@ -77,12 +77,14 @@ class ChatGPT:
         return answer, (n_input_tokens, n_output_tokens), n_first_dialog_messages_removed
 
     async def send_message_stream(self, message_in, user_id, dialog_messages=[], chat_mode="assistant"):
+        if chat_mode not in config.chat_modes.keys():
+            raise ValueError(f"Chat mode {chat_mode} is not supported")
         n_dialog_messages_before = len(dialog_messages)
         answer = None
         assistant= client.beta.assistants.retrieve(openai.assistant_id)
         n_input_tokens = 0 
         n_output_tokens = 0
-        # n_first_dialog_messages_removed = 0
+        n_first_dialog_messages_removed = 0
         while answer is None:
             try:
                 messages = self._prepare_messages(message_in, dialog_messages)
@@ -118,8 +120,9 @@ class ChatGPT:
                   stream.until_done()                                        
                     
                 answer = self._postprocess_answer(answer)
-            except Exception as e:
-            # except openai.error.InvalidRequestError as e:
+            # except Exception as e:
+            except openai.error.InvalidRequestError as e:
+                # raise e
                 if len(dialog_messages) == 0:
                     raise e
                 dialog_messages = dialog_messages[1:]
@@ -150,7 +153,9 @@ class ChatGPT:
         n_input_tokens = 0
         for message in messages:
             n_input_tokens += tokens_per_message
-            n_input_tokens += len(encoding.encode(message["content"]))
+            mess = message['content'][0]['text'] if isinstance (message['content'],  list)  else message['content']
+           
+            n_input_tokens += len(encoding.encode(mess))
         n_input_tokens += 2  # additional tokens for assistant
 
         n_output_tokens = 1 + len(encoding.encode(answer))
