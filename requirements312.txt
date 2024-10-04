@@ -4,3 +4,4 @@ tiktoken
 PyYAML
 pymongo
 python-dotenv
+python-i18n

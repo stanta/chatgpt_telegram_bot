@@ -5,8 +5,9 @@ import traceback
 import html
 import json
 from datetime import datetime
+from os import path
 import openai
-
+import base64
 import telegram
 from telegram import (
     Update,
@@ -29,14 +30,22 @@ from telegram.constants import ParseMode, ChatAction
 # from telethon import TelegramClient, connection, utils 
 # import telethon
 # from tg_file_id.file_id import FileId
-
+import i18n
+from i18n import t
 
 import config
 import database
 import openai_utils
 import openai_assistant_utils
 
-import base64
+
+ROOT_DIR = path.abspath(".")
+localedir = path.join(ROOT_DIR, 'locales')
+i18n.load_path.append(localedir)
+i18n.set('skip_locale_root_data', True)
+i18n.set('file_format', 'json')
+i18n.set('filename_format', '{locale}.{format}')
+# i18n.set('fallback', 'en')
 
 # setup
 db = database.Database()
@@ -47,20 +56,19 @@ user_tasks = {}
 
 # telegram_client = TelegramClient('anon', config.telegram_api_id, config.telegram_api_hash)
 
-HELP_MESSAGE = """Commands:
-⚪ /retry – Regenerate last bot answer
-⚪ /new – Start new dialog
-⚪ /mode – Select chat mode
-⚪ /settings – Show settings
-⚪ /balance – Show balance
-⚪ /help – Show help
+HELP_MESSAGE =   """Commands: 
+    ⚪ /retry – Regenerate last bot answer 
+    ⚪ /new – Start new dialog
+    ⚪ /mode – Select chat mode
+    ⚪ /settings – Show settings
+    ⚪ /balance – Show balance
+    ⚪ /help – Show help
 
 🎨 Generate images from text prompts in <b>👩‍🎨 Artist</b> /mode
 👥 Add bot to <b>group chat</b>: /help_group_chat
-🎤 You can send <b>Voice Messages</b> instead of text
-"""
+🎤 You can send <b>Voice Messages</b> instead of text"""
 
-HELP_GROUP_CHAT_MESSAGE = """You can add bot to any <b>group chat</b> to help and entertain its participants!
+HELP_GROUP_CHAT_MESSAGE=  """You can add bot to any <b>group chat</b> to help and entertain its participants!
 
 Instructions (see <b>video</b> below):
 1. Add the bot to the group chat
@@ -68,7 +76,7 @@ Instructions (see <b>video</b> below):
 3. You're awesome!
 
 To get a reply from the bot in the chat – @ <b>tag</b> it or <b>reply</b> to its message.
-For example: "{bot_username} write a poem about Telegram"
+For example: '{bot_username} write a poem about Telegram '
 """
 
 
@@ -646,10 +654,11 @@ async def new_dialog_handle(update: Update, context: CallbackContext):
     user_id = update.message.from_user.id
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
     if db.get_user_attribute(user_id, "current_model") not in  config.models["available_text_models"]:
-        db.set_user_attribute(user_id,  config.models["available_text_models"][0] ) 
-
+        db.set_user_attribute(user_id,  "current_model",  config.models["available_text_models"][0] ) 
+    # db.set_user_attribute(user_id,  "locale", update.message.from_user.language_code ) 
     db.start_new_dialog(user_id)
-    await update.message.reply_text("Starting new dialog ✅")
+    i18n.set('locale', update.message.from_user.language_code)
+    await update.message.reply_text(t("Starting new dialog ✅"))
 
     chat_mode = db.get_user_attribute(user_id, "current_chat_mode")
     await update.message.reply_text(f"{config.chat_modes[chat_mode]['welcome_message']}", parse_mode=ParseMode.HTML)
@@ -952,7 +961,7 @@ def run_bot() -> None:
     application.add_error_handler(error_handle)
 
     # start the bot
-    logger.info('bot started...')
+    logger.info(t('bot started...'))
     application.run_polling()
 
 
