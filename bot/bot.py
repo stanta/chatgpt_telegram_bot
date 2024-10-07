@@ -56,30 +56,8 @@ user_tasks = {}
 
 # telegram_client = TelegramClient('anon', config.telegram_api_id, config.telegram_api_hash)
 
-HELP_MESSAGE =   """Commands: 
-    ⚪ /retry – Regenerate last bot answer 
-    ⚪ /new – Start new dialog
-    ⚪ /mode – Select chat mode
-    ⚪ /settings – Show settings
-    ⚪ /balance – Show balance
-    ⚪ /help – Show help
-
-🎨 Generate images from text prompts in <b>👩‍🎨 Artist</b> /mode
-👥 Add bot to <b>group chat</b>: /help_group_chat
-🎤 You can send <b>Voice Messages</b> instead of text"""
-
-HELP_GROUP_CHAT_MESSAGE=  """You can add bot to any <b>group chat</b> to help and entertain its participants!
-
-Instructions (see <b>video</b> below):
-1. Add the bot to the group chat
-2. Make it an <b>admin</b>, so that it can see messages (all other rights can be restricted)
-3. You're awesome!
-
-To get a reply from the bot in the chat – @ <b>tag</b> it or <b>reply</b> to its message.
-For example: '{bot_username} write a poem about Telegram '
-"""
-
-
+HELP_MESSAGE = ""
+HELP_GROUP_CHAT_MESSAGE = ""
 def split_text_into_chunks(text, chunk_size):
     for i in range(0, len(text), chunk_size):
         yield text[i:i + chunk_size]
@@ -145,13 +123,17 @@ async def is_bot_mentioned(update: Update, context: CallbackContext):
 
 
 async def start_handle(update: Update, context: CallbackContext):
+    i18n.set('locale', update.message.from_user.language_code)
+    HELP_MESSAGE = t("Commands:\n⚪ /retry – Regenerate last bot answer\n⚪ /new – Start new dialog\n⚪ /mode – Select chat mode\n⚪ /settings – Show settings\n⚪ /balance – Show balance\n⚪ /help – Show help\n\n🎨 Generate images from text prompts in <b>👩‍🎨 Artist</b> /mode\n👥 Add bot to <b>group chat</b>: /help_group_chat\n🎤 You can send <b>Voice Messages</b> instead of text\n")
+    HELP_GROUP_CHAT_MESSAGE = t("You can add bot to any <b>group chat</b> to help and entertain its participants!\n\nInstructions (see <b>video</b> below):\n1. Add the bot to the group chat\n2. Make it an <b>admin</b>, so that it can see messages (all other rights can be restricted)\n3. You're awesome!\n\nTo get a reply from the bot in the chat – @ <b>tag</b> it or <b>reply</b> to its message.\nFor example: \"{bot_username} write a poem about Telegram\"\n")
+
     await register_user_if_not_exists(update, context, update.message.from_user)
     user_id = update.message.from_user.id
 
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
     db.start_new_dialog(user_id)
 
-    reply_text = "Hi! I'm <b>ChatGPT</b> bot implemented with OpenAI API 🤖\n\n"
+    reply_text = t("Hi! I'm <b>ChatGPT</b> bot implemented with OpenAI API 🤖\n\n")
     reply_text += HELP_MESSAGE
 
     await update.message.reply_text(reply_text, parse_mode=ParseMode.HTML)
@@ -166,6 +148,9 @@ async def help_handle(update: Update, context: CallbackContext):
 
 
 async def help_group_chat_handle(update: Update, context: CallbackContext):
+    #  i18n.set('locale', update.message.from_user.language_code)
+
+
      await register_user_if_not_exists(update, context, update.message.from_user)
      user_id = update.message.from_user.id
      db.set_user_attribute(user_id, "last_interaction", datetime.now())
@@ -185,7 +170,7 @@ async def retry_handle(update: Update, context: CallbackContext):
 
     dialog_messages = db.get_dialog_messages(user_id, dialog_id=None)
     if len(dialog_messages) == 0:
-        await update.message.reply_text("No message to retry 🤷‍♂️")
+        await update.message.reply_text(t("No message to retry 🤷‍♂️"))
         return
 
     last_dialog_message = dialog_messages.pop()
@@ -202,7 +187,7 @@ async def _vision_message_handle_fn(
 
     if current_model != "gpt-4-vision-preview" and current_model != "gpt-4o":
         await update.message.reply_text(
-            "🥲 Images processing is only available for <b>gpt-4-vision-preview</b> and <b>gpt-4o</b> model. Please change your settings in /settings",
+            t("🥲 Images processing is only available for <b>gpt-4-vision-preview</b> and <b>gpt-4o</b> model. Please change your settings in /settings"),
             parse_mode=ParseMode.HTML,
         )
         return
@@ -213,7 +198,7 @@ async def _vision_message_handle_fn(
     if use_new_dialog_timeout:
         if (datetime.now() - db.get_user_attribute(user_id, "last_interaction")).seconds > config.new_dialog_timeout and len(db.get_dialog_messages(user_id)) > 0:
             db.start_new_dialog(user_id)
-            await update.message.reply_text(f"Starting new dialog due to timeout (<b>{config.chat_modes[chat_mode]['name']}</b> mode) ✅", parse_mode=ParseMode.HTML)
+            await update.message.reply_text(t("Starting new dialog due to timeout (<b>{chat_mode}</b> mode) ✅").format(chat_mode=config.chat_modes[chat_mode]['name']), parse_mode=ParseMode.HTML)
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
 
     buf = None
@@ -232,7 +217,7 @@ async def _vision_message_handle_fn(
 
     try:
         # send placeholder message to user
-        placeholder_message = await update.message.reply_text("...")
+        placeholder_message = await update.message.reply_text(t("..."))
         message = update.message.caption or update.message.text or ''
 
         # send typing action
@@ -294,7 +279,7 @@ async def _vision_message_handle_fn(
                     parse_mode=parse_mode,
                 )
             except telegram.error.BadRequest as e:
-                if str(e).startswith("Message is not modified"):
+                if str(e).startswith(t("Message is not modified")):
                     continue
                 else:
                     await context.bot.edit_message_text(
@@ -338,13 +323,13 @@ async def _vision_message_handle_fn(
         raise
 
     except Exception as e:
-        error_text = f"Something went wrong during completion. Reason: {e}"
+        error_text = t("Something went wrong during completion. Reason: ") + str(e)
         logger.error(error_text)
         await update.message.reply_text(error_text)
         return
 
 async def unsupport_message_handle(update: Update, context: CallbackContext, message=None):
-    error_text = f"I don't know how to read files or videos. Send the picture in normal mode (Quick Mode)."
+    error_text = t("I don't know how to read files or videos. Send the picture in normal mode (Quick Mode).")
     logger.error(error_text)
     await update.message.reply_text(error_text)
     return
@@ -382,7 +367,7 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
         if use_new_dialog_timeout:
             if (datetime.now() - db.get_user_attribute(user_id, "last_interaction")).seconds > config.new_dialog_timeout and len(db.get_dialog_messages(user_id)) > 0:
                 db.start_new_dialog(user_id)
-                await update.message.reply_text(f"Starting new dialog due to timeout (<b>{config.chat_modes[chat_mode]['name']}</b> mode) ✅", parse_mode=ParseMode.HTML)
+                await update.message.reply_text(t("Starting new dialog due to timeout (<b>{chat_mode}</b> mode) ✅").format(chat_mode=config.chat_modes[chat_mode]['name']), parse_mode=ParseMode.HTML)
         db.set_user_attribute(user_id, "last_interaction", datetime.now())
 
         # in case of CancelledError
@@ -390,13 +375,13 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
 
         try:
             # send placeholder message to user
-            placeholder_message = await update.message.reply_text("...")
+            placeholder_message = await update.message.reply_text(t("..."))
 
             # send typing action
             await update.message.chat.send_action(action="typing")
 
             if _message is None or len(_message) == 0:
-                 await update.message.reply_text("🥲 You sent <b>empty message</b>. Please, try again!", parse_mode=ParseMode.HTML)
+                 await update.message.reply_text(t("🥲 You sent <b>empty message</b>. Please, try again!"), parse_mode=ParseMode.HTML)
                  return
 
             dialog_messages = db.get_dialog_messages(user_id, dialog_id=None)
@@ -434,7 +419,7 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
                 try:
                     await context.bot.edit_message_text(answer, chat_id=placeholder_message.chat_id, message_id=placeholder_message.message_id, parse_mode=parse_mode)
                 except telegram.error.BadRequest as e:
-                    if str(e).startswith("Message is not modified"):
+                    if str(e).startswith(t("Message is not modified")):
                         continue
                     else:
                         await context.bot.edit_message_text(answer, chat_id=placeholder_message.chat_id, message_id=placeholder_message.message_id)
@@ -460,7 +445,7 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
             raise
 
         except Exception as e:
-            error_text = f"Something went wrong during completion. Reason: {e}"
+            error_text = t("Something went wrong during completion. Reason: ") + str(e)
             logger.error(error_text)
             await update.message.reply_text(error_text)
             return
@@ -468,9 +453,9 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
         # send message if some messages were removed from the context
         if n_first_dialog_messages_removed > 0:
             if n_first_dialog_messages_removed == 1:
-                text = "✍️ <i>Note:</i> Your current dialog is too long, so your <b>first message</b> was removed from the context.\n Send /new command to start new dialog"
+                text = t("✍️ <i>Note:</i> Your current dialog is too long, so your <b>first message</b> was removed from the context.\n Send /new command to start new dialog")
             else:
-                text = f"✍️ <i>Note:</i> Your current dialog is too long, so <b>{n_first_dialog_messages_removed} first messages</b> were removed from the context.\n Send /new command to start new dialog"
+                text = t("✍️ <i>Note:</i> Your current dialog is too long, so <b>{n} first messages</b> were removed from the context.\n Send /new command to start new dialog").format(n=n_first_dialog_messages_removed)
             await update.message.reply_text(text, parse_mode=ParseMode.HTML)
 
     async with user_semaphores[user_id]: 
@@ -494,7 +479,7 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
         try:
             await task
         except asyncio.CancelledError:
-            await update.message.reply_text("✅ Canceled", parse_mode=ParseMode.HTML)
+            await update.message.reply_text(t("✅ Canceled"), parse_mode=ParseMode.HTML)
         else:
             pass
         finally:
@@ -507,8 +492,8 @@ async def is_previous_message_not_answered_yet(update: Update, context: Callback
 
     user_id = update.message.from_user.id
     if user_semaphores[user_id].locked():
-        text = "⏳ Please <b>wait</b> for a reply to the previous message\n"
-        text += "Or you can /cancel it"
+        text = t("⏳ Please <b>wait</b> for a reply to the previous message\n")
+        text += t("Or you can /cancel it")
         await update.message.reply_text(text, reply_to_message_id=update.message.id, parse_mode=ParseMode.HTML)
         return True
     else:
@@ -536,7 +521,7 @@ async def voice_message_handle(update: Update, context: CallbackContext):
     buf.seek(0)  # move cursor to the beginning of the buffer
 
     transcribed_text = await openai_utils.transcribe_audio(buf)
-    text = f"🎤: <i>{transcribed_text}</i>"
+    text = t("🎤: <i>{transcribed_text}</i>").format(transcribed_text=transcribed_text)
 
     await update.message.reply_text(text, parse_mode=ParseMode.HTML)
 
@@ -559,9 +544,9 @@ async def audio_message_handle(update: Update, context: CallbackContext):
     audio = update.message.audio 
     if audio.file_size < 20*1024*1024:
         audio_file = await context.bot.get_file(audio.file_id)
-        await update.message.reply_text(f"starting processing...")
+        await update.message.reply_text(t("starting processing..."))
     else: 
-        await update.message.reply_text(f"files > 20mb not supported yet")
+        await update.message.reply_text(t("files > 20mb not supported yet"))
 
     # store file in memory, not on disk
     buf = io.BytesIO()
@@ -570,19 +555,19 @@ async def audio_message_handle(update: Update, context: CallbackContext):
     buf.seek(0)  # move cursor to the beginning of the buffer
 
     transcribed_text = await openai_utils.transcribe_audio(buf)
-    text = f"🎤: <i>{transcribed_text}</i>"
-    await update.message.reply_text(f"text transcribed, prepare result...")
-    if len (text) < 500: 
+    text = t("🎤: <i>{transcribed_text}</i>").format(transcribed_text=transcribed_text)
+    await update.message.reply_text(t("text transcribed, prepare result..."))
+    if len(text) < 500: 
         await update.message.reply_text(text, parse_mode=ParseMode.HTML)
     else:
-        with open("/tmp/"+audio.file_name +".txt", 'w') as file:
+        with open("/tmp/" + audio.file_name + ".txt", 'w') as file:
             file.write(transcribed_text)
-        await update.message.reply_document(file.name,  parse_mode=ParseMode.HTML, caption= audio.file_name +".txt" ) 
+        await update.message.reply_document(file.name, parse_mode=ParseMode.HTML, caption=audio.file_name + ".txt") 
 
     # update n_transcribed_seconds
     db.set_user_attribute(user_id, "n_transcribed_seconds", audio.duration + db.get_user_attribute(user_id, "n_transcribed_seconds"))
 
-    await message_handle(update, context, message=update.message.caption_markdown_v2_urled+" " + transcribed_text)
+    await message_handle(update, context, message=update.message.caption_markdown_v2_urled + " " + transcribed_text)
 
 async def textdoc_message_handle(update: Update, context: CallbackContext):
     # check if bot was mentioned (for group chats)
@@ -598,10 +583,9 @@ async def textdoc_message_handle(update: Update, context: CallbackContext):
     doc = update.message.document 
     if doc.file_size < 20*1024*1024:
         doc_file = await context.bot.get_file(doc.file_id)
-        await update.message.reply_text(f"starting processing...")
+        await update.message.reply_text(t("starting processing..."))
     else: 
-        await update.message.reply_text(f"files > 20mb not supported yet")
-
+        await update.message.reply_text(t("files > 20mb not supported yet"))
 
     # store file in memory, not on disk
     buf = io.BytesIO()
@@ -612,10 +596,8 @@ async def textdoc_message_handle(update: Update, context: CallbackContext):
 
     # Convert to a "unicode" object
     text = byte_str.decode('UTF-8')  # Or use the encoding you expect
-   
 
-    #TODO - add checks ishave variants of caption.***
-    await message_handle(update, context, message= update.message.caption_markdown_v2_urled+" " + text)
+    await message_handle(update, context, message=update.message.caption_markdown_v2_urled + " " + text)
 
 
 async def generate_image_handle(update: Update, context: CallbackContext, message=None):
@@ -632,8 +614,8 @@ async def generate_image_handle(update: Update, context: CallbackContext, messag
     try:
         image_urls = await openai_utils.generate_images(message, n_images=config.return_n_generated_images, size=config.image_size)
     except openai.error.InvalidRequestError as e:
-        if str(e).startswith("Your request was rejected as a result of our safety system"):
-            text = "🥲 Your request <b>doesn't comply</b> with OpenAI's usage policies.\nWhat did you write there, huh?"
+        if str(e).startswith(t("Your request was rejected as a result of our safety system")):
+            text = t("🥲 Your request <b>doesn't comply</b> with OpenAI's usage policies.\nWhat did you write there, huh?")
             await update.message.reply_text(text, parse_mode=ParseMode.HTML)
             return
         else:
@@ -657,11 +639,13 @@ async def new_dialog_handle(update: Update, context: CallbackContext):
         db.set_user_attribute(user_id,  "current_model",  config.models["available_text_models"][0] ) 
     # db.set_user_attribute(user_id,  "locale", update.message.from_user.language_code ) 
     db.start_new_dialog(user_id)
-    i18n.set('locale', update.message.from_user.language_code)
+    locale =  update.message.from_user.language_code
+    i18n.set('locale', locale)
     await update.message.reply_text(t("Starting new dialog ✅"))
 
     chat_mode = db.get_user_attribute(user_id, "current_chat_mode")
-    await update.message.reply_text(f"{config.chat_modes[chat_mode]['welcome_message']}", parse_mode=ParseMode.HTML)
+    welcome_message =  config.chat_modes[chat_mode]['welcome_message'][locale] if locale in config.chat_modes[chat_mode]['welcome_message']  else config.chat_modes[chat_mode]['welcome_message'][i18n.get('fallback')]
+    await update.message.reply_text(f"{welcome_message}", parse_mode=ParseMode.HTML)
 
 
 async def cancel_handle(update: Update, context: CallbackContext):
@@ -674,12 +658,12 @@ async def cancel_handle(update: Update, context: CallbackContext):
         task = user_tasks[user_id]
         task.cancel()
     else:
-        await update.message.reply_text("<i>Nothing to cancel...</i>", parse_mode=ParseMode.HTML)
+        await update.message.reply_text(t("<i>Nothing to cancel...</i>"), parse_mode=ParseMode.HTML)
 
 
 def get_chat_mode_menu(page_index: int):
     n_chat_modes_per_page = config.n_chat_modes_per_page
-    text = f"Select <b>chat mode</b> ({len(config.chat_modes)} modes available):"
+    text = t("Select <b>chat mode</b> ({n} modes available):").format(n=len(config.chat_modes))
 
     # buttons
     chat_mode_keys = list(config.chat_modes.keys())
@@ -726,6 +710,7 @@ async def show_chat_modes_handle(update: Update, context: CallbackContext):
 
 
 async def show_chat_modes_callback_handle(update: Update, context: CallbackContext):
+     i18n.set('locale', update.message.from_user.language_code)
      await register_user_if_not_exists(update.callback_query, context, update.callback_query.from_user)
      if await is_previous_message_not_answered_yet(update.callback_query, context): return
 
@@ -743,7 +728,7 @@ async def show_chat_modes_callback_handle(update: Update, context: CallbackConte
      try:
          await query.edit_message_text(text, reply_markup=reply_markup, parse_mode=ParseMode.HTML)
      except telegram.error.BadRequest as e:
-         if str(e).startswith("Message is not modified"):
+         if str(e).startswith(t("Message is not modified")):
              pass
 
 
@@ -775,7 +760,7 @@ def get_settings_menu(user_id: int):
     for score_key, score_value in score_dict.items():
         text += "🟢" * score_value + "⚪️" * (5 - score_value) + f" – {score_key}\n\n"
 
-    text += "\nSelect <b>model</b>:"
+    text += t("\nSelect <b>model</b>:")
 
     # buttons to choose models
     buttons = []
@@ -804,6 +789,7 @@ async def settings_handle(update: Update, context: CallbackContext):
 
 
 async def set_settings_handle(update: Update, context: CallbackContext):
+    
     await register_user_if_not_exists(update.callback_query, context, update.callback_query.from_user)
     user_id = update.callback_query.from_user.id
 
@@ -818,7 +804,8 @@ async def set_settings_handle(update: Update, context: CallbackContext):
     try:
         await query.edit_message_text(text, reply_markup=reply_markup, parse_mode=ParseMode.HTML)
     except telegram.error.BadRequest as e:
-        if str(e).startswith("Message is not modified"):
+        i18n.set('locale', update.message.from_user.language_code)        
+        if str(e).startswith(t("Message is not modified")):
             pass
 
 
@@ -835,8 +822,8 @@ async def show_balance_handle(update: Update, context: CallbackContext):
     n_used_tokens_dict = db.get_user_attribute(user_id, "n_used_tokens")
     n_generated_images = db.get_user_attribute(user_id, "n_generated_images")
     n_transcribed_seconds = db.get_user_attribute(user_id, "n_transcribed_seconds")
-
-    details_text = "🏷️ Details:\n"
+    i18n.set('locale', update.message.from_user.language_code)
+    details_text = t("🏷️ Details:\n")
     for model_key in sorted(n_used_tokens_dict.keys()):
         n_input_tokens, n_output_tokens = n_used_tokens_dict[model_key]["n_input_tokens"], n_used_tokens_dict[model_key]["n_output_tokens"]
         total_n_used_tokens += n_input_tokens + n_output_tokens
@@ -850,33 +837,41 @@ async def show_balance_handle(update: Update, context: CallbackContext):
     # image generation
     image_generation_n_spent_dollars = config.models["info"]["dalle-2"]["price_per_1_image"] * n_generated_images
     if n_generated_images != 0:
-        details_text += f"- DALL·E 2 (image generation): <b>{image_generation_n_spent_dollars:.03f}$</b> / <b>{n_generated_images} generated images</b>\n"
+        details_text += t("- DALL·E 2 (image generation): <b>{spent_dollars:.03f}$</b> / <b>{n_images} generated images</b>\n").format(
+            spent_dollars=image_generation_n_spent_dollars,
+            n_images=n_generated_images
+        )
 
     total_n_spent_dollars += image_generation_n_spent_dollars
 
     # voice recognition
     voice_recognition_n_spent_dollars = config.models["info"]["whisper"]["price_per_1_min"] * (n_transcribed_seconds / 60)
     if n_transcribed_seconds != 0:
-        details_text += f"- Whisper (voice recognition): <b>{voice_recognition_n_spent_dollars:.03f}$</b> / <b>{n_transcribed_seconds:.01f} seconds</b>\n"
+        details_text += t("- Whisper (voice recognition): <b>{spent_dollars:.03f}$</b> / <b>{n_seconds:.01f} seconds</b>\n").format(
+            spent_dollars=voice_recognition_n_spent_dollars,
+            n_seconds=n_transcribed_seconds
+        )
 
     total_n_spent_dollars += voice_recognition_n_spent_dollars
 
 
-    text = f"You spent <b>{total_n_spent_dollars:.03f}$</b>\n"
-    text += f"You used <b>{total_n_used_tokens}</b> tokens\n\n"
+    text = t("You spent <b>{dollars:.03f}$</b>\n").format(dollars=total_n_spent_dollars)
+    text += t("You used <b>{tokens}</b> tokens\n\n").format(tokens=total_n_used_tokens)
     text += details_text
 
     await update.message.reply_text(text, parse_mode=ParseMode.HTML)
 
 
 async def edited_message_handle(update: Update, context: CallbackContext):
+    i18n.set('locale', update.message.from_user.language_code)
     if update.edited_message.chat.type == "private":
-        text = "🥲 Unfortunately, message <b>editing</b> is not supported"
+        text = t("🥲 Unfortunately, message <b>editing</b> is not supported")
         await update.edited_message.reply_text(text, parse_mode=ParseMode.HTML)
 
 
 async def error_handle(update: Update, context: CallbackContext) -> None:
-    logger.error(msg="Exception while handling an update:", exc_info=context.error)
+    i18n.set('locale', update.message.from_user.language_code)    
+    logger.error(msg=t("Exception while handling an update:"), exc_info=context.error)
 
     try:
         # collect error message
@@ -884,7 +879,7 @@ async def error_handle(update: Update, context: CallbackContext) -> None:
         tb_string = "".join(tb_list)
         update_str = update.to_dict() if isinstance(update, Update) else str(update)
         message = (
-            f"An exception was raised while handling an update\n"
+            t("An exception was raised while handling an update\n") +
             f"<pre>update = {html.escape(json.dumps(update_str, indent=2, ensure_ascii=False))}"
             "</pre>\n\n"
             f"<pre>{html.escape(tb_string)}</pre>"
@@ -898,16 +893,16 @@ async def error_handle(update: Update, context: CallbackContext) -> None:
                 # answer has invalid characters, so we send it without parse_mode
                 await context.bot.send_message(update.effective_chat.id, message_chunk)
     except:
-        await context.bot.send_message(update.effective_chat.id, "Some error in error handler")
+        await context.bot.send_message(update.effective_chat.id, t("Some error in error handler"))
 
 async def post_init(application: Application):
     await application.bot.set_my_commands([
-        BotCommand("/new", "Start new dialog"),
-        BotCommand("/mode", "Select chat mode"),
-        BotCommand("/retry", "Re-generate response for previous query"),
-        BotCommand("/balance", "Show balance"),
-        BotCommand("/settings", "Show settings"),
-        BotCommand("/help", "Show help message"),
+        BotCommand("/new", t("Start new dialog")),
+        BotCommand("/mode", t("Select chat mode")),
+        BotCommand("/retry", t("Re-generate response for previous query")),
+        BotCommand("/balance", t("Show balance")),
+        BotCommand("/settings", t("Show settings")),
+        BotCommand("/help", t("Show help message")),
     ])
 
 def run_bot() -> None:
@@ -944,6 +939,8 @@ def run_bot() -> None:
     application.add_handler(MessageHandler(filters.Document.ALL & ~filters.COMMAND & ~filters.Document.TEXT & user_filter, unsupport_message_handle))
 
     application.add_handler(CommandHandler("retry", retry_handle, filters=user_filter))
+
+
     application.add_handler(CommandHandler("new", new_dialog_handle, filters=user_filter))
     application.add_handler(CommandHandler("cancel", cancel_handle, filters=user_filter))
 

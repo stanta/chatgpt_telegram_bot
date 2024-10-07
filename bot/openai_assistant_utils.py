@@ -6,6 +6,7 @@ import database
 import tiktoken
 import openai
 from event_handler import EventHandler
+from i18n import t
 
 # setup openai client
 openai.api_key = config.openai_api_key
@@ -70,7 +71,7 @@ class ChatGPT:
                 n_output_tokens = response.usage.completion_tokens
             except openai.error.InvalidRequestError as e:
                 if len(dialog_messages) == 0:
-                    raise ValueError("Too many tokens even after reducing dialog messages") from e
+                    raise ValueError(t("Too many tokens even after reducing dialog messages")) from e
                 dialog_messages = dialog_messages[1:]
 
         n_first_dialog_messages_removed = n_dialog_messages_before - len(dialog_messages)
@@ -78,7 +79,7 @@ class ChatGPT:
 
     async def send_message_stream(self, message_in, user_id, dialog_messages=[], chat_mode="assistant"):
         if chat_mode not in config.chat_modes.keys():
-            raise ValueError(f"Chat mode {chat_mode} is not supported")
+            raise ValueError(t("Chat mode {chat_mode} is not supported"))
         n_dialog_messages_before = len(dialog_messages)
         answer = None
         assistant= client.beta.assistants.retrieve(openai.assistant_id)
