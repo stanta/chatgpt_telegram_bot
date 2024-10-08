@@ -56,8 +56,15 @@ user_tasks = {}
 
 # telegram_client = TelegramClient('anon', config.telegram_api_id, config.telegram_api_hash)
 
-HELP_MESSAGE = ""
-HELP_GROUP_CHAT_MESSAGE = ""
+HELP_MESSAGE = config.help_message
+HELP_GROUP_CHAT_MESSAGE = config.help_group_chat_message
+
+def tt (message, locale ): #text translator
+    if locale in message:
+        return message[locale] 
+    else: 
+         return message[i18n.get('fallback')]    
+
 def split_text_into_chunks(text, chunk_size):
     for i in range(0, len(text), chunk_size):
         yield text[i:i + chunk_size]
@@ -124,9 +131,7 @@ async def is_bot_mentioned(update: Update, context: CallbackContext):
 
 async def start_handle(update: Update, context: CallbackContext):
     i18n.set('locale', update.message.from_user.language_code)
-    HELP_MESSAGE = t("Commands:\n⚪ /retry – Regenerate last bot answer\n⚪ /new – Start new dialog\n⚪ /mode – Select chat mode\n⚪ /settings – Show settings\n⚪ /balance – Show balance\n⚪ /help – Show help\n\n🎨 Generate images from text prompts in <b>👩‍🎨 Artist</b> /mode\n👥 Add bot to <b>group chat</b>: /help_group_chat\n🎤 You can send <b>Voice Messages</b> instead of text\n")
-    HELP_GROUP_CHAT_MESSAGE = t("You can add bot to any <b>group chat</b> to help and entertain its participants!\n\nInstructions (see <b>video</b> below):\n1. Add the bot to the group chat\n2. Make it an <b>admin</b>, so that it can see messages (all other rights can be restricted)\n3. You're awesome!\n\nTo get a reply from the bot in the chat – @ <b>tag</b> it or <b>reply</b> to its message.\nFor example: \"{bot_username} write a poem about Telegram\"\n")
-
+    
     await register_user_if_not_exists(update, context, update.message.from_user)
     user_id = update.message.from_user.id
 
@@ -134,7 +139,7 @@ async def start_handle(update: Update, context: CallbackContext):
     db.start_new_dialog(user_id)
 
     reply_text = t("Hi! I'm <b>ChatGPT</b> bot implemented with OpenAI API 🤖\n\n")
-    reply_text += HELP_MESSAGE
+    reply_text += tt (HELP_MESSAGE, update.message.from_user.language_code) 
 
     await update.message.reply_text(reply_text, parse_mode=ParseMode.HTML)
     await show_chat_modes_handle(update, context)
@@ -144,7 +149,7 @@ async def help_handle(update: Update, context: CallbackContext):
     await register_user_if_not_exists(update, context, update.message.from_user)
     user_id = update.message.from_user.id
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
-    await update.message.reply_text(HELP_MESSAGE, parse_mode=ParseMode.HTML)
+    await update.message.reply_text(tt(HELP_MESSAGE, update.message.from_user.language_code), parse_mode=ParseMode.HTML)
 
 
 async def help_group_chat_handle(update: Update, context: CallbackContext):
@@ -154,8 +159,8 @@ async def help_group_chat_handle(update: Update, context: CallbackContext):
      await register_user_if_not_exists(update, context, update.message.from_user)
      user_id = update.message.from_user.id
      db.set_user_attribute(user_id, "last_interaction", datetime.now())
-
-     text = HELP_GROUP_CHAT_MESSAGE.format(bot_username="@" + context.bot.username)
+     h_g_c_m = tt( HELP_GROUP_CHAT_MESSAGE, update.message.from_user.language_code) 
+     text = h_g_c_m.format(bot_username="@" + context.bot.username)
 
      await update.message.reply_text(text, parse_mode=ParseMode.HTML)
      await update.message.reply_video(config.help_group_chat_video_path)
@@ -644,7 +649,7 @@ async def new_dialog_handle(update: Update, context: CallbackContext):
     await update.message.reply_text(t("Starting new dialog ✅"))
 
     chat_mode = db.get_user_attribute(user_id, "current_chat_mode")
-    welcome_message =  config.chat_modes[chat_mode]['welcome_message'][locale] if locale in config.chat_modes[chat_mode]['welcome_message']  else config.chat_modes[chat_mode]['welcome_message'][i18n.get('fallback')]
+    welcome_message =  tt(config.chat_modes[chat_mode]['welcome_message'], locale) 
     await update.message.reply_text(f"{welcome_message}", parse_mode=ParseMode.HTML)
 
 
@@ -870,7 +875,6 @@ async def edited_message_handle(update: Update, context: CallbackContext):
 
 
 async def error_handle(update: Update, context: CallbackContext) -> None:
-    i18n.set('locale', update.message.from_user.language_code)    
     logger.error(msg=t("Exception while handling an update:"), exc_info=context.error)
 
     try:
