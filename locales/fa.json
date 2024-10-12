@@ -1,5 +1,5 @@
 {
-    "Hi! I'm <b>ChatGPT</b> bot implemented with OpenAI API 🤖\n\n": "سلام! من ربات <b>ChatGPT</b> هستم که با API اوپن‌ای‌آی پیاده‌سازی شده است 🤖\n\n",
+    "Hi! I'm <b>YoursCoach</b> bot🤖\n\n": "سلام! من ربات <b>مربیشما</b> هستم🤖\n\n",
     "No message to retry 🤷‍♂️": "پیامی برای تلاش مجدد وجود ندارد 🤷‍♂️",
     "🥲 Images processing is only available for <b>gpt-4-vision-preview</b> and <b>gpt-4o</b> model. Please change your settings in /settings": "🥲 پردازش تصاویر فقط برای مدل‌های <b>gpt-4-vision-preview</b> و <b>gpt-4o</b> موجود است. لطفاً تنظیمات خود را در /settings تغییر دهید",
     "Starting new dialog due to timeout (<b>{config.chat_modes[chat_mode]['name']}</b> mode) ✅": "شروع دیالوگ جدید به دلیل اتمام زمان (حالت <b>{config.chat_modes[chat_mode]['name']}</b>) ✅",
@@ -51,5 +51,4 @@
     "Your request was rejected as a result of our safety system": "درخواست شما به دلیل سیستم امنیتی ما رد شد",
     "Exception while handling an update:": "استثنا هنگام پردازش به‌روزرسانی:",
     "An exception was raised while handling an update\n<pre>update = ": "استثنایی هنگام پردازش به‌روزرسانی رخ داد\n<pre>update = "
-
 }

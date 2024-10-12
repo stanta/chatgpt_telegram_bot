@@ -1,6 +1,5 @@
 {
-    "Hi! I'm <b>ChatGPT</b> bot implemented with OpenAI API 🤖\n\n": "Salut ! Je suis le bot <b>ChatGPT</b> implémenté avec l'API OpenAI 🤖\n\n",
-  
+    "Hi! I'm <b>YoursCoach</b> bot🤖\n\n": "Salut ! Je suis le robot YoursCoach 🤖\n\n",
     "No message to retry 🤷‍♂️": "Pas de message à réessayer 🤷‍♂️",
     "🥲 Images processing is only available for <b>gpt-4-vision-preview</b> and <b>gpt-4o</b> model. Please change your settings in /settings": "🥲 Le traitement des images est uniquement disponible pour les modèles <b>gpt-4-vision-preview</b> et <b>gpt-4o</b>. Veuillez changer vos paramètres dans /settings",
     "Starting new dialog due to timeout (<b>{config.chat_modes[chat_mode]['name']}</b> mode) ✅": "Démarrage d'un nouveau dialogue en raison du délai d'attente (mode <b>{config.chat_modes[chat_mode]['name']}</b>) ✅",

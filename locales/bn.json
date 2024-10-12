@@ -1,6 +1,5 @@
 {
-    "Hi! I'm <b>ChatGPT</b> bot implemented with OpenAI API 🤖\n\n": "হাই! আমি <b>ChatGPT</b> বট, যা OpenAI API দিয়ে ইমপ্লিমেন্ট করা হয়েছে 🤖\n\n",
-
+    "Hi! I'm <b>YoursCoach</b> bot🤖\n\n": "হাই! আমি <b>আপনারকোচ</b> বট🤖\n\n",
     "No message to retry 🤷‍♂️": "পুনরায় চেষ্টা করার জন্য কোনো মেসেজ নেই 🤷‍♂️",
     "🥲 Images processing is only available for <b>gpt-4-vision-preview</b> and <b>gpt-4o</b> model. Please change your settings in /settings": "🥲 ইমেজ প্রোসেসিং শুধুমাত্র <b>gpt-4-vision-preview</b> এবং <b>gpt-4o</b> মডেলের জন্য উপলব্ধ। দয়া করে /settings-এ আপনার সেটিং পরিবর্তন করুন",
     "Starting new dialog due to timeout (<b>{config.chat_modes[chat_mode]['name']}</b> mode) ✅": "টাইমআউটের কারণে নতুন সংলাপ শুরু করা হচ্ছে (<b>{config.chat_modes[chat_mode]['name']}</b> মোড) ✅",
