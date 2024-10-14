@@ -1,5 +1,5 @@
-available_text_models: ["gpt-4o"]
-# "gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4-1106-preview", "gpt-4-vision-preview", "gpt-4", "text-davinci-003",
+available_text_models: ["gpt-4-turbo"]
+# "gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4-turbo", "gpt-4-vision-preview", "gpt-4", "text-davinci-003",
 info:
   gpt-3.5-turbo:
     type: chat_completion
@@ -40,7 +40,7 @@ info:
       Fast: 2
       Cheap: 2
 
-  gpt-4-1106-preview:
+  gpt-4-turbo:
     type: chat_completion
     name: GPT-4 Turbo
     description: GPT-4 Turbo is a <b>faster</b> and <b>cheaper</b> version of GPT-4. It's as smart as GPT-4, so you should use it instead of GPT-4.
@@ -92,9 +92,23 @@ info:
       Cheap: 3
 
   dalle-2:
-     type: image
-     price_per_1_image: 0.018  # 512x512
+    type: image
+    price_per_1_image: 0.018 # 512x512
 
   whisper:
     type: audio
     price_per_1_min: 0.006
+
+gpt-4-turbo:
+  type: chat_completion
+  name: GPT-4-turbo
+  description:
+    en: GPT-4 Turbo is an optimized version of GPT-4 - one the <b>smartest</b> and most advanced model in the world, offering lower costs per token processing and an increased token limit (up to 128k tokens), making it preferable for tasks that require longer contexts and faster performance.
+    ru: Оптимизированная версия GPT-4 (одна из наиболее продвинутых моделей в мире), обладающая меньшей стоимостью за обработку токенов и увеличенным лимитом (вплоть до 128k токенов), что делает её предпочтительной для задач, где необходимы более длинные контексты и скорость выполнения.
+
+  price_per_1000_input_tokens: 0.012
+  price_per_1000_output_tokens: 0.024
+  scores:
+    smart: 4
+    fast: 4
+    cheap: 3

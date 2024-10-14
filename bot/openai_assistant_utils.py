@@ -44,7 +44,7 @@ class ChatGPT:
             "gpt-3.5-turbo",
             "gpt-4",
             "gpt-4o",
-            "gpt-4-1106-preview",
+            "gpt-4-turbo",
             "gpt-4-vision-preview",
         }, f"Unknown model: {model}"
         self.model = model
@@ -146,7 +146,7 @@ class ChatGPT:
         encoding = tiktoken.encoding_for_model(model)
         if model in ["gpt-3.5-turbo-16k", "gpt-3.5-turbo"]:
             tokens_per_message = 4
-        elif model in ["gpt-4", "gpt-4o", "gpt-4-1106-preview", "gpt-4-vision-preview"]:
+        elif model in ["gpt-4", "gpt-4o", "gpt-4-turbo", "gpt-4-vision-preview", "gpt-4-turbo"]:
             tokens_per_message = 3
         else:
             raise ValueError(f"Unknown model: {model}")

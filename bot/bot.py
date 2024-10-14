@@ -751,14 +751,14 @@ async def set_chat_mode_handle(update: Update, context: CallbackContext):
 
     await context.bot.send_message(
         update.callback_query.message.chat.id,
-        f"{config.chat_modes[chat_mode]['welcome_message']}",
+        tt(config.chat_modes[chat_mode]['welcome_message'], update.message.from_user.language_code),
         parse_mode=ParseMode.HTML
     )
 
 
 def get_settings_menu(user_id: int):
     current_model = db.get_user_attribute(user_id, "current_model")
-    text = config.models["info"][current_model]["description"]
+    text = tt (config.models["info"][current_model]["description"], update.message.from_user.language_code)
 
     text += "\n\n"
     score_dict = config.models["info"][current_model]["scores"]
