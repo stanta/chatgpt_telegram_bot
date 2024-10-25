@@ -7,16 +7,15 @@ import tiktoken
 import openai
 from event_handler import EventHandler
 from i18n import t
+from openai import AsyncOpenAI, OpenAI
 
 # setup openai client
-openai.api_key = config.openai_api_key
-openai.assistant_id = config.openai_api_assistant
-if config.openai_api_base is not None:
-    openai.api_base = config.openai_api_base
-if config.openai_api_organization is not None:
-    openai.organization = config.openai_api_organization
-if config.openai_api_project is not None:
-    openai.project_id = config.openai_api_project
+client = OpenAI(api_key=config.openai_api_key,
+                    organization=config.openai_api_organization
+                    )
+
+
+
 logger = logging.getLogger(__name__)
 
 OPENAI_COMPLETION_OPTIONS = {
@@ -27,12 +26,6 @@ OPENAI_COMPLETION_OPTIONS = {
     "presence_penalty": 0,
     "request_timeout": 60.0,
 }
-
-client = openai.OpenAI(
-    api_key = config.openai_api_key,
-    # organization = config.openai_api_organization,
-    # project = config.openai_api_project
-)
 
 db = database.Database()
 
@@ -49,7 +42,7 @@ class ChatGPT:
         }, f"Unknown model: {model}"
         self.model = model
         self.assistants = {}  # Cache for assistants per chat_mode
-        
+
 
 # ASSISTANT_ID = "asst_nPqP4wzrr4N4mYlz9bZGlsWR"  # Используем готовый ID ассистента
 
@@ -60,7 +53,7 @@ class ChatGPT:
         while answer is None:
             try:
                 messages = self._prepare_messages(message, dialog_messages)
-                assistant= client.beta.assistants.retrieve(openai.assistant_id)
+                assistant= client.beta.assistants.retrieve(config.openai_api_assistant)
 
                 response = await assistant.chat( #openai.client.beta.
                     messages=messages
@@ -69,7 +62,8 @@ class ChatGPT:
                 answer = self._postprocess_answer(answer)
                 n_input_tokens = response.usage.prompt_tokens
                 n_output_tokens = response.usage.completion_tokens
-            except openai.error.InvalidRequestError as e:
+            except Exception as e:
+            # except openai.InvalidRequestError as e:
                 if len(dialog_messages) == 0:
                     raise ValueError(t("Too many tokens even after reducing dialog messages")) from e
                 dialog_messages = dialog_messages[1:]
@@ -82,7 +76,7 @@ class ChatGPT:
             raise ValueError(t("Chat mode {chat_mode} is not supported"))
         n_dialog_messages_before = len(dialog_messages)
         answer = None
-        assistant= client.beta.assistants.retrieve(openai.assistant_id)
+        assistant= client.beta.assistants.retrieve(config.openai_api_assistant)
         n_input_tokens = 0 
         n_output_tokens = 0
         n_first_dialog_messages_removed = 0
@@ -95,7 +89,7 @@ class ChatGPT:
                     thread = client.beta.threads.create()
                     db.set_user_attribute(user_id, "thread_id", thread.id)
                     thread_id = thread.id
-                
+
                 message = client.beta.threads.messages.create(
                     thread_id=thread_id,
                     role="user",
@@ -119,10 +113,10 @@ class ChatGPT:
                         n_first_dialog_messages_removed = n_dialog_messages_before - len(dialog_messages)
                         yield "not_finished", answer, (n_input_tokens, n_output_tokens), n_first_dialog_messages_removed
                   stream.until_done()                                        
-                    
+
                 answer = self._postprocess_answer(answer)
-            # except Exception as e:
-            except openai.error.InvalidRequestError as e:
+            except Exception as e:
+            #except openai.InvalidRequestError as e:
                 # raise e
                 if len(dialog_messages) == 0:
                     raise e
@@ -155,11 +149,10 @@ class ChatGPT:
         for message in messages:
             n_input_tokens += tokens_per_message
             mess = message['content'][0]['text'] if isinstance (message['content'],  list)  else message['content']
-           
+
             n_input_tokens += len(encoding.encode(mess))
         n_input_tokens += 2  # additional tokens for assistant
 
         n_output_tokens = 1 + len(encoding.encode(answer))
         return n_input_tokens, n_output_tokens
 
-  
