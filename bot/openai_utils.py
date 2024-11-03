@@ -7,8 +7,8 @@ import tiktoken
 import openai
 from openai import AsyncOpenAI, OpenAI
 
-# aclient = AsyncOpenAI(api_key=config.openai_api_key)
-client = OpenAI(api_key=config.openai_api_key)
+client = AsyncOpenAI(api_key=config.openai_api_key)
+#client = OpenAI(api_key=config.openai_api_key)
 
 
 # setup openai
@@ -345,16 +345,16 @@ class ChatGPT:
 
 async def transcribe_audio(audio_file) -> str:
     # r = await openai.Audio.atranscribe("whisper-1", audio_file)
-    r = client.audio.transcriptions.create(model="whisper-1", file=audio_file)
+    r = await client.audio.transcriptions.create(model="whisper-1", file=audio_file)
     return r.text or ""
 
 
 async def generate_images(prompt, n_images=4, size="512x512"):
-    r = client.images.generate(prompt=prompt, n=n_images, size=size)
+    r = await client.images.generate(prompt=prompt, n=n_images, size=size)
     image_urls = [item.url for item in r.data]
     return image_urls
 
 
 async def is_content_acceptable(prompt):
-    r = client.moderations.create(input=prompt)
+    r = await client.moderations.create(input=prompt)
     return not all(r.results[0].categories.values())

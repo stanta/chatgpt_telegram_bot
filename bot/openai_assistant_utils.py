@@ -10,7 +10,7 @@ from i18n import t
 from openai import AsyncOpenAI, OpenAI
 
 # setup openai client
-client = OpenAI(api_key=config.openai_api_key,
+client = AsyncOpenAI(api_key=config.openai_api_key,
                     organization=config.openai_api_organization
                     )
 
@@ -53,7 +53,7 @@ class ChatGPT:
         while answer is None:
             try:
                 messages = self._prepare_messages(message, dialog_messages)
-                assistant= client.beta.assistants.retrieve(config.openai_api_assistant)
+                assistant= await client.beta.assistants.retrieve(config.openai_api_assistant)
 
                 response = await assistant.chat( #openai.client.beta.
                     messages=messages
@@ -76,7 +76,7 @@ class ChatGPT:
             raise ValueError(t("Chat mode {chat_mode} is not supported"))
         n_dialog_messages_before = len(dialog_messages)
         answer = None
-        assistant= client.beta.assistants.retrieve(config.openai_api_assistant)
+        assistant=await client.beta.assistants.retrieve(config.openai_api_assistant)
         n_input_tokens = 0 
         n_output_tokens = 0
         n_first_dialog_messages_removed = 0
@@ -86,24 +86,24 @@ class ChatGPT:
                 # get_or_create thread 
                 thread_id = db.get_user_attribute(user_id, "thread_id") 
                 if thread_id is None:
-                    thread = client.beta.threads.create()
+                    thread = await client.beta.threads.create()
                     db.set_user_attribute(user_id, "thread_id", thread.id)
                     thread_id = thread.id
 
-                message = client.beta.threads.messages.create(
+                message = await client.beta.threads.messages.create(
                     thread_id=thread_id,
                     role="user",
                     content=message_in
 
                 )
                 #async? 
-                with client.beta.threads.runs.stream(
+                async with  client.beta.threads.runs.stream(
                     thread_id=thread_id,
                     assistant_id=assistant.id,
                     # event_handler=EventHandler(),
                 ) as stream:
                   answer = ""
-                  for event in stream:
+                  async for event in stream:
                     if event.event == "thread.message.delta" and event.data.delta.content:
                         delta = event.data.delta.content[0] # delta["content"]
                         answer += delta.text.value
@@ -112,7 +112,7 @@ class ChatGPT:
                         )
                         n_first_dialog_messages_removed = n_dialog_messages_before - len(dialog_messages)
                         yield "not_finished", answer, (n_input_tokens, n_output_tokens), n_first_dialog_messages_removed
-                  stream.until_done()                                        
+                  await stream.until_done()                                        
 
                 answer = self._postprocess_answer(answer)
             except Exception as e:
