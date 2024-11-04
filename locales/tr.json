@@ -50,5 +50,7 @@
     "🎤: <i>": "🎤: <i>",
     "Your request was rejected as a result of our safety system": "İsteğiniz güvenlik sistemimiz tarafından reddedildi",
     "Exception while handling an update:": "Güncellemeyi işlerken istisna oluştu:",
-    "An exception was raised while handling an update\n<pre>update = ": "Bir güncelleme işlenirken bir istisna meydana geldi\n<pre>güncelleme = "
+    "An exception was raised while handling an update\n<pre>update = ": "Bir güncelleme işlenirken bir istisna meydana geldi\n<pre>güncelleme = ",
+    "Nice to see you again! Some time gone, want to start /new dialog (make new chat context, save tokens) or continue this chat (spend more tokens)": "Sizi tekrar görmek güzel! Bir süre geçti, yeni bir diyalog '/new' başlatmak ister misiniz (yeni bir sohbet bağlamı oluşturmak, tokenleri tasarruf etmek) yoksa bu sohbeti devam ettirmek mi istersiniz (daha fazla token harcamak)?"
+
 }

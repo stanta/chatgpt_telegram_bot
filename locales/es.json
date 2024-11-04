@@ -50,5 +50,6 @@
     "🎤: <i>": "🎤: <i>",
     "Your request was rejected as a result of our safety system": "Tu solicitud fue rechazada como resultado de nuestro sistema de seguridad",
     "Exception while handling an update:": "Excepción al manejar una actualización:",
-    "An exception was raised while handling an update\n<pre>update = ": "Se produjo una excepción al manejar una actualización\n<pre>update = "
+    "An exception was raised while handling an update\n<pre>update = ": "Se produjo una excepción al manejar una actualización\n<pre>update = ",
+    "Nice to see you again! Some time gone, want to start /new dialog (make new chat context, save tokens) or continue this chat (spend more tokens)":"¡Qué bueno verte de nuevo! Ha pasado algún tiempo, ¿quieres iniciar un nuevo diálogo '/new' (crear un nuevo contexto de chat, ahorrar tokens) o continuar este chat (gastar más tokens)?"
 }

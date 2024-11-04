@@ -50,5 +50,7 @@
     "🎤: <i>": "🎤: <i>",
     "Your request was rejected as a result of our safety system": "คำขอของคุณถูกปฏิเสธเนื่องจากระบบความปลอดภัยของเรา",
     "Exception while handling an update:": "เกิดข้อยกเว้นระหว่างจัดการอัปเดต:",
-    "An exception was raised while handling an update\n<pre>update = ": "เกิดข้อยกเว้นระหว่างจัดการอัปเดต\n<pre>อัปเดต = "
+    "An exception was raised while handling an update\n<pre>update = ": "เกิดข้อยกเว้นระหว่างจัดการอัปเดต\n<pre>อัปเดต = ",
+    "Nice to see you again! Some time gone, want to start /new dialog (make new chat context, save tokens) or continue this chat (spend more tokens)": " ดีใจที่ได้พบคุณอีกครั้ง! เวลาผ่านไปสักระยะแล้ว คุณต้องการเริ่มการสนทนา '/new' (สร้างบริบทการแชทใหม่ ประหยัดโทเค็น) หรือดำเนินการแชทนี้ต่อ (ใช้โทเค็นมากขึ้น)?"
+
 }

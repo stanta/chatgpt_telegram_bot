@@ -50,5 +50,6 @@
     "🎤: <i>": "🎤: <i>",
     "Your request was rejected as a result of our safety system": "درخواست شما به دلیل سیستم امنیتی ما رد شد",
     "Exception while handling an update:": "استثنا هنگام پردازش به‌روزرسانی:",
-    "An exception was raised while handling an update\n<pre>update = ": "استثنایی هنگام پردازش به‌روزرسانی رخ داد\n<pre>update = "
+    "An exception was raised while handling an update\n<pre>update = ": "استثنایی هنگام پردازش به‌روزرسانی رخ داد\n<pre>update = ",
+    "Nice to see you again! Some time gone, want to start /new dialog (make new chat context, save tokens) or continue this chat (spend more tokens)": "خوشحالم دوباره شما را می‌بینم! مدتی گذشته است، آیا می‌خواهید گفت‌وگوی '/new' را آغاز کنید (یک زمینه چت جدید ایجاد کنید، توکن‌ها را ذخیره کنید) یا این چت را ادامه دهید (توکن‌های بیشتری خرج کنید)؟"
 }

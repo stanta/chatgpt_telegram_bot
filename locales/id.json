@@ -50,5 +50,6 @@
     "🎤: <i>": "🎤: <i>",
     "Your request was rejected as a result of our safety system": "Permintaan Anda ditolak akibat sistem keamanan kami",
     "Exception while handling an update:": "Pengecualian saat menangani pembaruan:",
-    "An exception was raised while handling an update\n<pre>update = ": "Pengecualian terjadi saat menangani pembaruan\n<pre>update = "
+    "An exception was raised while handling an update\n<pre>update = ": "Pengecualian terjadi saat menangani pembaruan\n<pre>update = ",
+    "Nice to see you again! Some time gone, want to start /new dialog (make new chat context, save tokens) or continue this chat (spend more tokens)": "Senang melihatmu lagi! Sudah beberapa waktu berlalu, ingin memulai dialog '/new' (membuat konteks obrolan baru, menghemat token) atau melanjutkan obrolan ini (menghabiskan lebih banyak token)?"
 }

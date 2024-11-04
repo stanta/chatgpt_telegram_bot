@@ -50,5 +50,7 @@
     "🎤: <i>": "🎤: <i>",
     "Your request was rejected as a result of our safety system": "आपका अनुरोध हमारे सुरक्षा सिस्टम के कारण अस्वीकार कर दिया गया",
     "Exception while handling an update:": "अपडेट को हैंडल करते समय अपवाद:",
-    "An exception was raised while handling an update\n<pre>update = ": "अपडेट को हैंडल करते समय एक अपवाद उत्पन्न हुआ\n<pre>अपडेट = "
+    "An exception was raised while handling an update\n<pre>update = ": "अपडेट को हैंडल करते समय एक अपवाद उत्पन्न हुआ\n<pre>अपडेट = ",
+    "Nice to see you again! Some time gone, want to start /new dialog (make new chat context, save tokens) or continue this chat (spend more tokens)": "फिर से आपसे मिलकर अच्छा लगा! कुछ समय हो गया है, क्या आप नया संवाद '/new' शुरू करना चाहते हैं (नया चैट संदर्भ बनाना, टोकन बचाना) या इस चैट को जारी रखना चाहते हैं (अधिक टोकन खर्च करना)?"
+
 }
