@@ -51,7 +51,5 @@
     "Your request was rejected as a result of our safety system": "تم رفض طلبك نتيجة لنظام الأمان الخاص بنا",
     "Exception while handling an update:": "استثناء أثناء معالجة التحديث:",
     "An exception was raised while handling an update\n<pre>update = ": "تم إثارة استثناء أثناء معالجة التحديث\n<pre>update = ",
-    "Nice to see you again! Some time gone, want to start /new dialog (make new chat context, save tokens) or continue this chat (spend more tokens)": "سعيد برؤيتك مرة أخرى! لقد مضى بعض الوقت، هل تريد بدء حوار '/new' (إنشاء سياق دردشة جديد، حفظ الرموز) أو متابعة هذه الدردشة (إنفاق المزيد من الرموز)؟"
-
-
+    "Nice to see you again! Some time gone, want to start /new dialog (make new chat context, save tokens) or continue this chat (spend more tokens)": "سعيد برؤيتك مرة أخرى! لقد مضى بعض الوقت، هل تريد بدء حوار /new (إنشاء سياق دردشة جديد، حفظ الرموز) أو متابعة هذه الدردشة (إنفاق المزيد من الرموز)؟"
 }

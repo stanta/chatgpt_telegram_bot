@@ -51,5 +51,5 @@
     "Your request was rejected as a result of our safety system": "您的请求因我们的安全系统而被拒绝",
     "Exception while handling an update:": "处理更新时出现异常：",
     "An exception was raised while handling an update\n<pre>update = ": "处理更新时引发了异常\n<pre>更新 = ",
-    "Nice to see you again! Some time gone, want to start /new dialog (make new chat context, save tokens) or continue this chat (spend more tokens)": "很高兴再次见到你！已经过去一段时间了，你想开始新的对话 '/new'（创建新的聊天上下文，节省代币）还是继续这个聊天（花费更多代币）？"
+    "Nice to see you again! Some time gone, want to start /new dialog (make new chat context, save tokens) or continue this chat (spend more tokens)": "很高兴再次见到你！已经过去一段时间了，你想开始新的对话 /new（创建新的聊天上下文，节省代币）还是继续这个聊天（花费更多代币）？"
 }

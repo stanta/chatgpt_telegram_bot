@@ -51,6 +51,5 @@
     "Your request was rejected as a result of our safety system": "Votre demande a été rejetée en raison de notre système de sécurité",
     "Exception while handling an update:": "Exception lors du traitement d'une mise à jour :",
     "An exception was raised while handling an update\n<pre>update = ": "Une exception a été levée lors du traitement d'une mise à jour\n<pre>mise à jour = ",
-    "Nice to see you again! Some time gone, want to start /new dialog (make new chat context, save tokens) or continue this chat (spend more tokens)":"Ravi de te revoir ! Ça fait un moment, souhaites-tu commencer un nouveau dialogue '/new' (créer un nouveau contexte de chat, économiser des tokens) ou continuer cette conversation (dépenser plus de tokens) ?"
-
+    "Nice to see you again! Some time gone, want to start /new dialog (make new chat context, save tokens) or continue this chat (spend more tokens)": "Ravi de te revoir ! Ça fait un moment, souhaites-tu commencer un nouveau dialogue /new (créer un nouveau contexte de chat, économiser des tokens) ou continuer cette conversation (dépenser plus de tokens) ?"
 }

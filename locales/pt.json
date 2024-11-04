@@ -51,6 +51,5 @@
     "Your request was rejected as a result of our safety system": "Sua solicitação foi rejeitada como resultado do nosso sistema de segurança",
     "Exception while handling an update:": "Exceção ao lidar com uma atualização:",
     "An exception was raised while handling an update\n<pre>update = ": "Uma exceção foi gerada ao lidar com uma atualização\n<pre>update = ",
-    "Nice to see you again! Some time gone, want to start /new dialog (make new chat context, save tokens) or continue this chat (spend more tokens)":"Bom te ver novamente! Já se passou algum tempo, você quer começar um novo diálogo '/new' (criar um novo contexto de chat, economizar tokens) ou continuar este chat (gastar mais tokens)?"
-
+    "Nice to see you again! Some time gone, want to start /new dialog (make new chat context, save tokens) or continue this chat (spend more tokens)": "Bom te ver novamente! Já se passou algum tempo, você quer começar um novo diálogo /new (criar um novo contexto de chat, economizar tokens) ou continuar este chat (gastar mais tokens)?"
 }
