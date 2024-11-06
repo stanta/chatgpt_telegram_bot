@@ -50,7 +50,9 @@ class Database:
             "n_used_tokens": {},
 
             "n_generated_images": 0,
-            "n_transcribed_seconds": 0.0  # voice message transcription
+            "n_transcribed_seconds": 0.0,  # voice message transcription
+            
+            "balance":config.init_user_balance # in USD
         }
 
         if not self.check_if_user_exists(user_id):
@@ -96,7 +98,7 @@ class Database:
 
     def update_n_used_tokens(self, user_id: int, model: str, n_input_tokens: int, n_output_tokens: int):
         n_used_tokens_dict = self.get_user_attribute(user_id, "n_used_tokens")
-
+        balance = self.get_user_attribute(user_id, "balance")
         if model in n_used_tokens_dict:
             n_used_tokens_dict[model]["n_input_tokens"] += n_input_tokens
             n_used_tokens_dict[model]["n_output_tokens"] += n_output_tokens
@@ -105,8 +107,19 @@ class Database:
                 "n_input_tokens": n_input_tokens,
                 "n_output_tokens": n_output_tokens
             }
+        balance -= n_input_tokens * config.models["info"][model]["price_per_1000_input_tokens"] * (n_input_tokens / 1000)
+        balance -= n_output_tokens * config.models["info"][model_key]["price_per_1000_output_tokens"] * (n_output_tokens / 1000)
 
         self.set_user_attribute(user_id, "n_used_tokens", n_used_tokens_dict)
+        self.set_user_attribute(user_id, "balance", balance)
+
+    def check_balance_positive (self, user_id: int):
+        return self.get_user_attribute(user_id, "balance") >= 0
+    
+    def add_balance(self, user_id: int, amount: float):
+        balance = self.get_user_attribute(user_id, "balance")
+        balance += amount
+        self.set_user_attribute(user_id, "balance", balance)
 
     def get_dialog_messages(self, user_id: int, dialog_id: Optional[str] = None):
         self.check_if_user_exists(user_id, raise_exception=True)

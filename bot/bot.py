@@ -63,12 +63,21 @@ def tt (message, locale ): #text translator
     if locale in message:
         return message[locale] 
     else: 
-         return message[i18n.get('fallback')]    
+        return message[i18n.get('fallback')]    
 
 def split_text_into_chunks(text, chunk_size):
     for i in range(0, len(text), chunk_size):
         yield text[i:i + chunk_size]
 
+def is_no_enough_balance (update: Update):
+    if not db.check_balance_positive (update.message.from_user.id):
+        return True
+    await context.bot.send_message(
+            update.callback_query.message.chat.id,
+            t("No enough balance, /buy tokens"),
+            parse_mode=ParseMode.HTML
+        )
+    return False
 
 async def register_user_if_not_exists(update: Update, context: CallbackContext, user: User):
     if not db.check_if_user_exists(user.id):
@@ -186,6 +195,8 @@ async def retry_handle(update: Update, context: CallbackContext):
 async def _vision_message_handle_fn(
     update: Update, context: CallbackContext, use_new_dialog_timeout: bool = True
 ):
+    if is_no_enough_balance (update):
+        return
     logger.info('_vision_message_handle_fn')
     user_id = update.message.from_user.id
     current_model = db.get_user_attribute(user_id, "current_model")
@@ -342,6 +353,7 @@ async def unsupport_message_handle(update: Update, context: CallbackContext, mes
 
 async def message_handle(update: Update, context: CallbackContext, message=None, use_new_dialog_timeout=True):
     # check if bot was mentioned (for group chats)
+
     if not await is_bot_mentioned(update, context):
         return
 
@@ -369,6 +381,8 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
     current_model = db.get_user_attribute(user_id, "current_model")
 
     async def message_handle_fn():
+        if is_no_enough_balance (update):
+            return
         # new dialog timeout
         if use_new_dialog_timeout:
             if (datetime.now() - db.get_user_attribute(user_id, "last_interaction")).seconds > config.new_dialog_timeout and len(db.get_dialog_messages(user_id)) > 0:
@@ -388,8 +402,8 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
             await update.message.chat.send_action(action="typing")
 
             if _message is None or len(_message) == 0:
-                 await update.message.reply_text(t("🥲 You sent <b>empty message</b>. Please, try again!"), parse_mode=ParseMode.HTML)
-                 return
+                await update.message.reply_text(t("🥲 You sent <b>empty message</b>. Please, try again!"), parse_mode=ParseMode.HTML)
+                return
 
             dialog_messages = db.get_dialog_messages(user_id, dialog_id=None)
             parse_mode = {
