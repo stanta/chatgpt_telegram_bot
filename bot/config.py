@@ -43,6 +43,9 @@ with open(config_dir / "models.yml", 'r') as f:
 # models
 with open(config_dir / "help_translations.yml", 'r') as f:
     translations = yaml.safe_load(f)
+    
+with open(config_dir / "payment_plans.yml", 'r') as f:
+    payment_plans = yaml.safe_load(f)
 
 #help
 help_message = translations['HELP_MESSAGE']
@@ -50,3 +53,7 @@ help_group_chat_message = translations['HELP_GROUP_CHAT_MESSAGE']
 
 # files
 help_group_chat_video_path = Path(__file__).parent.parent.resolve() / "static" / "help_group_chat.mp4"
+# Загрузка конфигурации меню из YAML-файла
+with open(config_dir / "buy_menu_config.yml", "r", encoding="utf-8") as file:
+        buy_menu_config = yaml.safe_load(file)
+

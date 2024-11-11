@@ -32,9 +32,10 @@ from telegram.constants import ParseMode, ChatAction
 # from tg_file_id.file_id import FileId
 import i18n
 from i18n import t
-
+from buy import buy_start
 import config
 import database
+
 import openai_utils
 import openai_assistant_utils
 
@@ -69,7 +70,7 @@ def split_text_into_chunks(text, chunk_size):
     for i in range(0, len(text), chunk_size):
         yield text[i:i + chunk_size]
 
-def is_no_enough_balance (update: Update):
+async def is_no_enough_balance (update: Update):
     if not db.check_balance_positive (update.message.from_user.id):
         return True
     await context.bot.send_message(
@@ -947,6 +948,7 @@ def run_bot() -> None:
         user_filter = filters.User(username=usernames) | filters.User(user_id=user_ids) | filters.Chat(chat_id=group_ids)
 
     application.add_handler(CommandHandler("start", start_handle, filters=user_filter))
+    
     application.add_handler(CommandHandler("help", help_handle, filters=user_filter))
     application.add_handler(CommandHandler("help_group_chat", help_group_chat_handle, filters=user_filter))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND & user_filter, message_handle))
@@ -959,8 +961,6 @@ def run_bot() -> None:
     application.add_handler(MessageHandler(filters.Document.ALL & ~filters.COMMAND & ~filters.Document.TEXT & user_filter, unsupport_message_handle))
 
     application.add_handler(CommandHandler("retry", retry_handle, filters=user_filter))
-
-
     application.add_handler(CommandHandler("new", new_dialog_handle, filters=user_filter))
     application.add_handler(CommandHandler("cancel", cancel_handle, filters=user_filter))
 
@@ -970,11 +970,11 @@ def run_bot() -> None:
     # application.add_handler(CallbackQueryHandler(show_chat_modes_callback_handle, pattern="^show_chat_modes"))
     # application.add_handler(CallbackQueryHandler(set_chat_mode_handle, pattern="^set_chat_mode"))
 
-    # application.add_handler(CommandHandler("settings", settings_handle, filters=user_filter))
-    # application.add_handler(CallbackQueryHandler(set_settings_handle, pattern="^set_settings"))
+    application.add_handler(CommandHandler("settings", settings_handle, filters=user_filter))
+    application.add_handler(CallbackQueryHandler(set_settings_handle, pattern="^set_settings"))
 
     application.add_handler(CommandHandler("balance", show_balance_handle, filters=user_filter))
-
+    application.add_handler(CommandHandler("buy", buy_start, filters=user_filter))
     application.add_error_handler(error_handle)
 
     # start the bot

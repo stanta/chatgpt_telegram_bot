@@ -1,0 +1,13 @@
+menu:
+  - title: "Главное меню"
+    buttons:
+      - text: "Информация"
+        callback_data: "info"
+      - text: "Подписка"
+        submenu:
+          - text: "Месячная подписка"
+            callback_data: "subscribe_monthly"
+          - text: "Годовая подписка"
+            callback_data: "subscribe_yearly"
+      - text: "Поддержка"
+        callback_data: "support"
