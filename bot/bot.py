@@ -32,7 +32,8 @@ from telegram.constants import ParseMode, ChatAction
 # from tg_file_id.file_id import FileId
 import i18n
 from i18n import t
-from buy import buy_start
+from staff import tt
+from buy import buy_start, buy_button_handler
 import config
 import database
 
@@ -46,7 +47,7 @@ i18n.load_path.append(localedir)
 i18n.set('skip_locale_root_data', True)
 i18n.set('file_format', 'json')
 i18n.set('filename_format', '{locale}.{format}')
-# i18n.set('fallback', 'en')
+i18n.set('fallback', 'en')
 
 # setup
 db = database.Database()
@@ -60,11 +61,6 @@ user_tasks = {}
 HELP_MESSAGE = config.help_message
 HELP_GROUP_CHAT_MESSAGE = config.help_group_chat_message
 
-def tt (message, locale ): #text translator
-    if locale in message:
-        return message[locale] 
-    else: 
-        return message[i18n.get('fallback')]    
 
 def split_text_into_chunks(text, chunk_size):
     for i in range(0, len(text), chunk_size):
@@ -773,7 +769,7 @@ async def set_chat_mode_handle(update: Update, context: CallbackContext):
     )
 
 
-def get_settings_menu(user_id: int):
+def get_settings_menu(user_id: int, update: Update):
     current_model = db.get_user_attribute(user_id, "current_model")
     text = tt (config.models["info"][current_model]["description"], update.message.from_user.language_code)
 
@@ -806,7 +802,7 @@ async def settings_handle(update: Update, context: CallbackContext):
     user_id = update.message.from_user.id
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
 
-    text, reply_markup = get_settings_menu(user_id)
+    text, reply_markup = get_settings_menu(user_id, update)
     await update.message.reply_text(text, reply_markup=reply_markup, parse_mode=ParseMode.HTML)
 
 
@@ -913,8 +909,12 @@ async def error_handle(update: Update, context: CallbackContext) -> None:
             except telegram.error.BadRequest:
                 # answer has invalid characters, so we send it without parse_mode
                 await context.bot.send_message(update.effective_chat.id, message_chunk)
-    except:
-        await context.bot.send_message(update.effective_chat.id, t("Some error in error handler"))
+    except Exception as e:        
+        if hasattr(update, "effective_chat"): 
+            await context.bot.send_message(update.effective_chat.id, t("Some error in error handler") + str (e))
+        else:
+            error_text = t("Some error in error handler. Reason: ") + str(e)
+            logger.error(error_text)
 
 async def post_init(application: Application):
     await application.bot.set_my_commands([
@@ -975,7 +975,9 @@ def run_bot() -> None:
 
     application.add_handler(CommandHandler("balance", show_balance_handle, filters=user_filter))
     application.add_handler(CommandHandler("buy", buy_start, filters=user_filter))
+    application.add_handler(CallbackQueryHandler(buy_button_handler))
     application.add_error_handler(error_handle)
+    #TODO - rewrite main menu to use only menu_config.yml
 
     # start the bot
     logger.info(t('bot started...'))

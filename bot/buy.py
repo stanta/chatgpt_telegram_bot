@@ -2,17 +2,20 @@
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton, Update
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext
 import config
-
+from i18n import t
+from staff import tt
 
 # Функция для создания меню на основе конфигурации
-def build_menu(menu_config, submenu_name=None):
+async def build_menu(menu_config, submenu_name=None):
     keyboard = []
     # Если submenu_name указан, ищем соответствующий раздел меню
     if submenu_name:
-        submenu = next(item["submenu"] for item in menu_config["menu"] if item["title"] == submenu_name)
-        for button in submenu:
+        submenu = next((item["submenu"] for item in menu_config["menu"][0]["buttons"] if item["text"] == submenu_name), None)
+        if submenu is None:
+            raise ValueError(f"Submenu with name {submenu_name} not found")
+        for button in submenu[0]["buttons"]:
             keyboard.append([InlineKeyboardButton(button["text"], callback_data=button["callback_data"])])
-        keyboard.append([InlineKeyboardButton("Назад", callback_data="back")])
+        keyboard.append([InlineKeyboardButton(t("Back"), callback_data="back")])
     else:
         for item in menu_config["menu"]:
             buttons = []
@@ -24,27 +27,28 @@ def build_menu(menu_config, submenu_name=None):
             keyboard.append(buttons)
     return InlineKeyboardMarkup(keyboard)
 
-# Функция для обработки команды /start
-def buy_start(update: Update, context: CallbackContext) -> None:
-    context.user_data["menu_config"] = config.buy_menu_config
-    reply_markup = build_menu(context.user_data["menu_config"])
-    update.message.reply_text(t("Choose what to buy:"), reply_markup=reply_markup)
 
 # Функция для обработки нажатий кнопок
-def button_handler(update: Update, context: CallbackContext) -> None:
-    query = update.callback_query
-    query.answer()
+async def buy_button_handler(update: Update, context: CallbackContext) -> None:
+    query =  update.callback_query
+    await query.answer()
     
     data = query.data
     if data.startswith("submenu_"):
         submenu_name = data.split("submenu_")[1]
-        reply_markup = build_menu(context.user_data["menu_config"], submenu_name=submenu_name)
-        query.edit_message_text(text="Выберите опцию:", reply_markup=reply_markup)
+        reply_markup = await build_menu(context.user_data["menu_config"], submenu_name=submenu_name)
+        await query.edit_message_text(text=t("Choose option:"), reply_markup=reply_markup)
     elif data == "back":
-        reply_markup = build_menu(context.user_data["menu_config"])
-        query.edit_message_text(text="Главное меню:", reply_markup=reply_markup)
+        reply_markup = await build_menu(context.user_data["menu_config"])
+        await query.edit_message_text(text=t("Main menu :"), reply_markup=reply_markup)
     else:
-        query.edit_message_text(text=f"Вы выбрали: {data}")
+        await query.edit_message_text(text=t(f"Your choose: {data}"))
+
+# Функция для обработки команды /start
+async def buy_start(update: Update, context: CallbackContext) -> None:
+    context.user_data["menu_config"] = tt(config.buy_menu_config, update.message.from_user.language_code)
+    reply_markup = await build_menu(context.user_data["menu_config"])
+    await update.message.reply_text(t("Choose:"), reply_markup=reply_markup)
 
 # # Запуск бота
 # def main():
