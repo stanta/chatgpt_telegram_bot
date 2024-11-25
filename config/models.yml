@@ -4,7 +4,8 @@ info:
   gpt-3.5-turbo:
     type: chat_completion
     name: ChatGPT
-    description: ChatGPT is that well-known model. It's <b>fast</b> and <b>cheap</b>. Ideal for everyday tasks. If there are some tasks it can't handle, try the <b>GPT-4</b>.
+    description:  
+      en: ChatGPT is that well-known model. It's <b>fast</b> and <b>cheap</b>. Ideal for everyday tasks. If there are some tasks it can't handle, try the <b>GPT-4</b>.
 
     price_per_1000_input_tokens: 0.0015
     price_per_1000_output_tokens: 0.002
@@ -17,7 +18,8 @@ info:
   gpt-3.5-turbo-16k:
     type: chat_completion
     name: GPT-16K
-    description: ChatGPT is that well-known model. It's <b>fast</b> and <b>cheap</b>. Ideal for everyday tasks. If there are some tasks it can't handle, try the <b>GPT-4</b>.
+    description:  
+      en: ChatGPT is that well-known model. It's <b>fast</b> and <b>cheap</b>. Ideal for everyday tasks. If there are some tasks it can't handle, try the <b>GPT-4</b>.
 
     price_per_1000_input_tokens: 0.003
     price_per_1000_output_tokens: 0.004
@@ -30,7 +32,8 @@ info:
   gpt-4:
     type: chat_completion
     name: GPT-4
-    description: GPT-4 is the <b>smartest</b> and most advanced model in the world. But it is slower and not as cost-efficient as ChatGPT. Best choice for <b>complex</b> intellectual tasks.
+    description:  
+      en: GPT-4 is the <b>smartest</b> and most advanced model in the world. But it is slower and not as cost-efficient as ChatGPT. Best choice for <b>complex</b> intellectual tasks.
 
     price_per_1000_input_tokens: 0.03
     price_per_1000_output_tokens: 0.06
@@ -43,7 +46,8 @@ info:
   gpt-4-turbo:
     type: chat_completion
     name: GPT-4 Turbo
-    description: GPT-4 Turbo is a <b>faster</b> and <b>cheaper</b> version of GPT-4. It's as smart as GPT-4, so you should use it instead of GPT-4.
+    description:  
+      en: GPT-4 Turbo is a <b>faster</b> and <b>cheaper</b> version of GPT-4. It's as smart as GPT-4, so you should use it instead of GPT-4.
 
     price_per_1000_input_tokens: 0.01
     price_per_1000_output_tokens: 0.03
@@ -56,7 +60,8 @@ info:
   gpt-4-vision-preview:
     type: chat_completion
     name: GPT-4 Vision
-    description: Ability to <b>understand images</b>, in addition to all other GPT-4 Turbo capabilties.
+    description:  
+      en: Ability to <b>understand images</b>, in addition to all other GPT-4 Turbo capabilties.
 
     price_per_1000_input_tokens: 0.01
     price_per_1000_output_tokens: 0.03
@@ -68,7 +73,8 @@ info:
   gpt-4o:
     type: chat_completion
     name: GPT-4o
-    description: GPT-4o is a special variant of GPT-4 designed for optimal performance and accuracy. Suitable for complex and detailed tasks.
+    description:  
+      en: GPT-4o is a special variant of GPT-4 designed for optimal performance and accuracy. Suitable for complex and detailed tasks.
 
     price_per_1000_input_tokens: 0.03
     price_per_1000_output_tokens: 0.06
@@ -81,7 +87,8 @@ info:
   text-davinci-003:
     type: completion
     name: GPT-3.5
-    description: GPT-3.5 is a legacy model. Actually there is <b>no reason to use it</b>, because it is more expensive and slower than ChatGPT, but just about as smart.
+    description:  
+      en: GPT-3.5 is a legacy model. Actually there is <b>no reason to use it</b>, because it is more expensive and slower than ChatGPT, but just about as smart.
 
     price_per_1000_input_tokens: 0.02
     price_per_1000_output_tokens: 0.02
@@ -102,7 +109,7 @@ info:
 gpt-4-turbo:
   type: chat_completion
   name: GPT-4-turbo
-  description:
+  description:  
     en: GPT-4 Turbo is an optimized version of GPT-4 - one the <b>smartest</b> and most advanced model in the world, offering lower costs per token processing and an increased token limit (up to 128k tokens), making it preferable for tasks that require longer contexts and faster performance.
     ru: Оптимизированная версия GPT-4 (одна из наиболее продвинутых моделей в мире), обладающая меньшей стоимостью за обработку токенов и увеличенным лимитом (вплоть до 128k токенов), что делает её предпочтительной для задач, где необходимы более длинные контексты и скорость выполнения.
 

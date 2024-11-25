@@ -33,7 +33,7 @@ from telegram.constants import ParseMode, ChatAction
 import i18n
 from i18n import t
 from staff import tt
-from buy import buy_start, buy_button_handler
+from buy import menu_start, button_handler
 import config
 import database
 
@@ -919,6 +919,7 @@ async def error_handle(update: Update, context: CallbackContext) -> None:
 async def post_init(application: Application):
     await application.bot.set_my_commands([
         BotCommand("/new", t("Start new dialog")),
+        BotCommand("/buy", t("Buy bot tokends")),
         # BotCommand("/mode", t("Select chat mode")),
         BotCommand("/retry", t("Re-generate response for previous query")),
         BotCommand("/balance", t("Show balance")),
@@ -974,8 +975,8 @@ def run_bot() -> None:
     application.add_handler(CallbackQueryHandler(set_settings_handle, pattern="^set_settings"))
 
     application.add_handler(CommandHandler("balance", show_balance_handle, filters=user_filter))
-    application.add_handler(CommandHandler("buy", buy_start, filters=user_filter))
-    application.add_handler(CallbackQueryHandler(buy_button_handler))
+    application.add_handler(CommandHandler("buy", menu_start, filters=user_filter))
+    application.add_handler(CallbackQueryHandler(button_handler))
     application.add_error_handler(error_handle)
     #TODO - rewrite main menu to use only menu_config.yml
 

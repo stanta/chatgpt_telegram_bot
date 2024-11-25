@@ -1,13 +1,110 @@
-menu:
-  - title: "Главное меню"
-    buttons:
-      - text: "Информация"
-        callback_data: "info"
-      - text: "Подписка"
-        submenu:
-          - text: "Месячная подписка"
-            callback_data: "subscribe_monthly"
-          - text: "Годовая подписка"
-            callback_data: "subscribe_yearly"
-      - text: "Поддержка"
-        callback_data: "support"
+ru:
+  # menu:
+    - text: "Покупка токенов Коуча: Выберите способ оплаты"
+      buttons:
+        - text: "Покупка с карты"
+          action: ""
+          params: ""
+        - text: "Покупка за крипту"
+          submenu:
+          - text: "Выберите валюту"
+            buttons:
+            - text: "за TON"
+              submenu:
+              - text: "Выберите количество "
+                buttons:
+                - text: "0.01 ТОН-0.01 млн YoursCoach токенов"
+                  action: "create_order"
+                  params:
+                    - "TON"
+                    - "0.0000001"       
+                    - "10000"               
+                - text: "4.5 ТОН-5 млн YoursCoach токенов "
+                  action: "create_order"
+                  params:
+                    - "TON"
+                    - "0.0000009"
+                    - "5000000"
+                - text: "7 ТОН-10 млн YoursCoach токенов"
+                  action: "create_order"
+                  params:
+                    - "TON"
+                    - "0.000007"    
+                    - "10000000"                                                
+            - text: "за USDT"
+              submenu:
+              - text: "Выберите количество "
+                buttons:
+                - text: "5 USDT - 1 млн YoursCoach токенов"
+                  action: "create_order"
+                  params:
+                    - "USDT"
+                    - "0.000005"                      
+                    - "1000000"
+                - text: "5 млн YoursCoach токенов - 22.5 USDT"
+                  action: "create_order"
+                  params:
+                    - "USDT"
+                    - "0.0000045"
+                    - "5000000"
+                - text: "10 млн YoursCoach токенов - 40 USDT"
+                  action: "create_order"
+                  params:
+                    - "USDT"
+                    - "0.000004" 
+                    - "10000000"                                                   
+en:
+  # menu:
+    - text: "Coach Token Purchase: Choose Payment Method"
+      buttons:
+        - text: "Buy with Card"
+          action: ""
+          params: ""
+        - text: "Buy with Crypto"
+          submenu:
+            - text: "Select Currency"
+              buttons:
+              - text: "for TONs"
+                submenu:
+                  - text: "Select Amount"
+                    buttons:
+                      - text: "1TON-1mln. YoursCoach tokens"
+                        action: "create_order"
+                        params:
+                          - "TON"
+                          - "0.000001"
+                          - "1000000"
+                      - text: "4.5TON-5mln. YoursCoach tokens"
+                        action: "create_order"
+                        params:
+                          - "TON"
+                          - "0.0000009"
+                          - "5000000"
+                      - text: "7TON-10mln. YoursCoach tokens"
+                        action: "create_order"
+                        params:
+                          - "TON"
+                          - "0.000007"
+                          - "10000000"
+              - text: "for USDT"
+                submenu:
+                  - text: "Select Amount"
+                    buttons:
+                      - text: "5USDT-1mln. YoursCoach tokens"
+                        action: "create_order"
+                        params:
+                          - "USDT"
+                          - "0.000005"
+                          - "1000000"
+                      - text: "22.5USDT-5mln. YoursCoach tokens"
+                        action: "create_order"
+                        params:
+                          - "USDT"
+                          - "0.0000045"
+                          - "5000000"
+                      - text: "40-USDT-10mln. YoursCoach tokens"
+                        action: "create_order"
+                        params:
+                          - "USDT"
+                          - "0.000004"
+                          - "10000000"

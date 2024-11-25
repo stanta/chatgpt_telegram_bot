@@ -32,7 +32,12 @@ init_user_balance = config_yaml.get("init_user_balance", 10)
 mongo_host=config_env.get("MONGO_HOST", "localhost")
 mongodb_uri = f"mongodb://{mongo_host}:{config_env['MONGODB_PORT']}"
 
-# chat_modes
+arc_API_key = config_yaml["arc_API_key"]
+arc_private_key = config_yaml["arc_private_key"]
+
+youkassa_key = config_yaml["youkassa_key"]
+youkassa_shop_id = config_yaml["youkassa_shop_id"]
+
 with open(config_dir / "chat_modes.yml", 'r') as f:
     chat_modes = yaml.safe_load(f)
 
