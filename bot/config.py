@@ -32,6 +32,7 @@ init_user_balance = config_yaml.get("init_user_balance", 10)
 mongo_host=config_env.get("MONGO_HOST", "localhost")
 mongodb_uri = f"mongodb://{mongo_host}:{config_env['MONGODB_PORT']}"
 
+arcpay_url = config_yaml["arcpay_url"]
 arc_API_key = config_yaml["arc_API_key"]
 arc_private_key = config_yaml["arc_private_key"]
 

@@ -13,7 +13,6 @@ from i18n import t
 
 PRIVATE_KEY = config.arc_private_key
 ARC_KEY = config.arc_API_key
-url = "https://arcpay.online/api/v1/arcpay/order"
 
 shop_database = {}
 
@@ -34,10 +33,10 @@ async def create_order(currency, price, amount ):
     data['orderId'] = "INV-YOURSCOACH-" + datetime.now().strftime('%Y%m%d%H%M%S')    
     data['items'][0]['title'] = amount + " tokens"
     data['items'][0]['price'] = price
-    data['items'][0]['amount'] = amount
+    data['items'][0]['count'] = amount
     result = None
     async with ClientSession() as session:
-        async with session.post(url, json=data, headers=headers) as response:
+        async with session.post(config.arcpay_url , json=data, headers=headers) as response:
             if response.status == 200:
                 result = await response.json()
                 logger.info (f"Order created successfully: {result}")
@@ -59,29 +58,35 @@ async def check_order (orderId):
     for i in range(1, 360):
         await asyncio.sleep(10)
         async with ClientSession() as session:
-            async with session.get(url  + "/" + orderId ) as response:
-                if response.status == 200:
-                    result = await response.json()
+            try:    
+                async with session.get(config.arcpay_url + "/" + orderId ) as response:
+                    if response.status == 200:
+                        result = await response.json()
+                        
+                        # Process the response
+                        # Add your logic here to handle the received data
+                        # shop_database[result["uuid"]] = result  # example store order                
+                        if result["status"] == "received": 
+                            logger.info(f"Order payed successfully: {result}")
+                            return (True, t("Order payed successfully: ") + str(result))
+                        
+                        elif result["status"] == "cancelled" or result["status"] == "failed": 
+                            logger.warning(
+                                f"Order cancelled or failed  Status: {result}"
+                            )
+                            return (False,  t("Order cancelled or failed  Status:") + str(result))
                     
-                    # Process the response
-                    # Add your logic here to handle the received data
-                    # shop_database[result["uuid"]] = result  # example store order                
-                    if result["status"] == "received": 
-                        logger.info(f"Order payed successfully: {result}")
-                        return (True, t("Order payed successfully: ") + result)
-                    
-                    elif result["status"] == "cancelled" or result["status"] == "failed": 
-                        logger.warning(
-                            f"Order cancelled or failed  Status: {result}"
+                    else:
+                        txt = await response.text()
+                        logger.exception(
+                        f"Failed to check order status: {response.status}, Error: {txt}"
                         )
-                        return (False,  t("Order cancelled or failed  Status:") + str(result))
-                
-                else:
-                    txt = await response.text()
-                    logger.exception(
-                    f"Failed to check order status: {response.status}, Error: {txt}"
-                    )
-                    return (False,  t("Failed to check order status:") +  response.status + "Error:" + txt)
+                        return (False,  t("Failed to check order status:") +  response.status + "Error:" + txt)
+            except Exception as e:
+                logger.exception(
+                    f"Failed to connect: {e}"
+                )
+                # return (False,  t("Failed to check order status:") + str(e))
 
     return (False,  t("Order {orderId} wasn't payed for 1 hour,  make a new order, please.") )
 

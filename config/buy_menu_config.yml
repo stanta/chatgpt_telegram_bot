@@ -17,7 +17,7 @@ ru:
                   action: "create_order"
                   params:
                     - "TON"
-                    - "0.0000001"       
+                    - "0.000001"       
                     - "10000"               
                 - text: "4.5 ТОН-5 млн YoursCoach токенов "
                   action: "create_order"

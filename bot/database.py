@@ -98,7 +98,7 @@ class Database:
 
     def update_n_used_tokens(self, user_id: int, model: str, n_input_tokens: int, n_output_tokens: int):
         n_used_tokens_dict = self.get_user_attribute(user_id, "n_used_tokens")
-        balance = self.get_user_attribute(user_id, "balance")
+        balance = float (self.get_user_attribute(user_id, "balance"))
         if model in n_used_tokens_dict:
             n_used_tokens_dict[model]["n_input_tokens"] += n_input_tokens
             n_used_tokens_dict[model]["n_output_tokens"] += n_output_tokens
@@ -108,17 +108,21 @@ class Database:
                 "n_output_tokens": n_output_tokens
             }
         balance -= n_input_tokens * config.models["info"][model]["price_per_1000_input_tokens"] * (n_input_tokens / 1000)
-        balance -= n_output_tokens * config.models["info"][model_key]["price_per_1000_output_tokens"] * (n_output_tokens / 1000)
+        balance -= n_output_tokens * config.models["info"][model]["price_per_1000_output_tokens"] * (n_output_tokens / 1000)
 
         self.set_user_attribute(user_id, "n_used_tokens", n_used_tokens_dict)
         self.set_user_attribute(user_id, "balance", balance)
 
     def check_balance_positive (self, user_id: int):
-        return self.get_user_attribute(user_id, "balance") >= 0
+        res = self.get_user_attribute(user_id, "balance")
+        return int(self.get_user_attribute(user_id, "balance")) >= 0
     
     def add_balance(self, user_id: int, amount: float):
         balance = self.get_user_attribute(user_id, "balance")
-        balance += amount
+        if balance is None:
+            balance = amount # back compatibility for old users
+        else:
+            balance += amount
         self.set_user_attribute(user_id, "balance", balance)
 
     def get_dialog_messages(self, user_id: int, dialog_id: Optional[str] = None):

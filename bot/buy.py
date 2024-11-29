@@ -77,7 +77,7 @@ async def button_handler(update: Update, context: CallbackContext) -> None:
                 (order_payed, status) = await check_order(order['uuid'])
                 await query.edit_message_text( status)
                 if order_payed: 
-                    db.add_balance(update,  params[2])
+                    db.add_balance(update.effective_user.id,  params[2])
             else:
                 await query.edit_message_text(order)
 
