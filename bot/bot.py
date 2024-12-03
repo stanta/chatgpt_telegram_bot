@@ -849,41 +849,43 @@ async def show_balance_handle(update: Update, context: CallbackContext):
     n_used_tokens_dict = db.get_user_attribute(user_id, "n_used_tokens")
     n_generated_images = db.get_user_attribute(user_id, "n_generated_images")
     n_transcribed_seconds = db.get_user_attribute(user_id, "n_transcribed_seconds")
+    balance = db.get_user_attribute(user_id, "balance")
     i18n.set('locale', update.message.from_user.language_code)
     details_text = t("🏷️ Details:\n")
     for model_key in sorted(n_used_tokens_dict.keys()):
         n_input_tokens, n_output_tokens = n_used_tokens_dict[model_key]["n_input_tokens"], n_used_tokens_dict[model_key]["n_output_tokens"]
         total_n_used_tokens += n_input_tokens + n_output_tokens
 
-        n_input_spent_dollars = config.models["info"][model_key]["price_per_1000_input_tokens"] * (n_input_tokens / 1000)
-        n_output_spent_dollars = config.models["info"][model_key]["price_per_1000_output_tokens"] * (n_output_tokens / 1000)
-        total_n_spent_dollars += n_input_spent_dollars + n_output_spent_dollars
+        # n_input_spent_dollars = config.models["info"][model_key]["price_per_1000_input_tokens"] * (n_input_tokens / 1000)
+        # n_output_spent_dollars = config.models["info"][model_key]["price_per_1000_output_tokens"] * (n_output_tokens / 1000)
+        # total_n_spent_dollars += n_input_spent_dollars + n_output_spent_dollars
 
-        details_text += f"- {model_key}: <b>{n_input_spent_dollars + n_output_spent_dollars:.03f}$</b> / <b>{n_input_tokens + n_output_tokens} tokens</b>\n"
+        details_text += f"- {model_key}: <b>{n_input_tokens + n_output_tokens} tokens</b>\n"
 
     # image generation
-    image_generation_n_spent_dollars = config.models["info"]["dalle-2"]["price_per_1_image"] * n_generated_images
+    # image_generation_n_spent_dollars = config.models["info"]["dalle-2"]["price_per_1_image"] * n_generated_images
     if n_generated_images != 0:
-        details_text += t("- DALL·E 2 (image generation): <b>{spent_dollars:.03f}$</b> / <b>{n_images} generated images</b>\n").format(
-            spent_dollars=image_generation_n_spent_dollars,
+        details_text += t("- DALL·E 2 (image generation):  <b>{n_images} generated images</b>\n").format(
+            # spent_dollars=image_generation_n_spent_dollars,
             n_images=n_generated_images
         )
 
-    total_n_spent_dollars += image_generation_n_spent_dollars
+    # total_n_spent_dollars += image_generation_n_spent_dollars
 
     # voice recognition
-    voice_recognition_n_spent_dollars = config.models["info"]["whisper"]["price_per_1_min"] * (n_transcribed_seconds / 60)
+    # voice_recognition_n_spent_dollars = config.models["info"]["whisper"]["price_per_1_min"] * (n_transcribed_seconds / 60)
     if n_transcribed_seconds != 0:
-        details_text += t("- Whisper (voice recognition): <b>{spent_dollars:.03f}$</b> / <b>{n_seconds:.01f} seconds</b>\n").format(
-            spent_dollars=voice_recognition_n_spent_dollars,
+        details_text += t("- Whisper (voice recognition):  <b>{n_seconds:.01f} seconds</b>\n").format(
+            # spent_dollars=voice_recognition_n_spent_dollars,
             n_seconds=n_transcribed_seconds
         )
 
-    total_n_spent_dollars += voice_recognition_n_spent_dollars
+    # total_n_spent_dollars += voice_recognition_n_spent_dollars
 
 
-    text = t("You spent <b>{dollars:.03f}$</b>\n").format(dollars=total_n_spent_dollars)
-    text += t("You used <b>{tokens}</b> tokens\n\n").format(tokens=total_n_used_tokens)
+    # text = t("You spent <b>{dollars:.03f}$</b>\n").format(dollars=total_n_spent_dollars)
+    text =  t("Your current balance: <b>{balance}</b> tokens\n\n").format(balance=balance)
+    text += t("You totally spent <b>{tokens}</b> tokens\n\n").format(tokens=total_n_used_tokens)
     text += details_text
 
     await update.message.reply_text(text, parse_mode=ParseMode.HTML)

@@ -1,5 +1,6 @@
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton, Update
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext
+from telegram.constants import ParseMode
 import config
 from i18n import t
 from staff import tt
@@ -7,6 +8,7 @@ from arcpay_server import create_order, check_order
 import database
 
 db = database.Database()
+
 
 def create_callback_data(action, params):
     return f"{action}:{':'.join(params)}"
@@ -72,15 +74,55 @@ async def button_handler(update: Update, context: CallbackContext) -> None:
         if action == "create_order":
             (order_created, order) = await create_order(params[0], params[1], params[2]) #currency, price, amount
             if order_created :
-                await query.edit_message_text(t(str(order) +
-                    "\n Payment link: ") + order["paymentUrl"])
-                (order_payed, status) = await check_order(order['uuid'])
-                await query.edit_message_text( status)
-                if order_payed: 
-                    db.add_balance(update.effective_user.id,  params[2])
-            else:
-                await query.edit_message_text(order)
+                # await query.edit_message_text(t(str(order) +
+                #     "\n Payment link: ") + order["paymentUrl"])
+                formatted_order = f"""
+                - *{order['title']}*
+                - *Order ID:* {order['orderId']}
+                - *Status:* {order['status']}
+                *Items:*
+                - *Item ID:* {order['items'][0]['itemId']}
+                - *Title:* {order['items'][0]['title']}
+                - *Description:* {order['items'][0]['description']}
+                - *Price:* {order['items'][0]['price']} {order['currency']}
+                - *Count:* {order['items'][0]['count']}
+                - *AMOUNT TO PAY:* {order['amount']} {order['currency']}
 
+                - [CLICK HERE TO PAY]({order['paymentUrl']})
+
+                """ 
+                
+                await query.edit_message_text(formatted_order, parse_mode=ParseMode.MARKDOWN)
+                (order_payed, status) = await check_order(order['uuid'])
+                if order_payed: 
+                    formatted_status = f"""
+                    *{status['title']}*
+                    - *Order ID:* {status['orderId']}
+                    - *Status:* {status['status']}
+                    *Transaction:*
+                    - *Hash:* {status['txn']['hash']}
+                    😇 PAYED SUCCESSFULLY ✅ 
+                    """
+                    await query.edit_message_text(formatted_status, parse_mode=ParseMode.MARKDOWN)
+                    
+                    db.add_balance(update.effective_user.id,  params[2])
+                else:
+                    formatted_status = f"""
+                    *{status['title']}*
+                    - *Order ID:* {status['orderId']}
+                    - *Status:* {status['status']}
+                    
+                    🥲 Unfortunately NOT PAYED 🔴 
+                    """
+                    await query.edit_message_text(formatted_status, parse_mode=ParseMode.MARKDOWN)
+            else:
+                formatted_order = f"""
+                - *{order['title']}*
+                - *Order ID:* {order['orderId']}
+                - *Status:* {order['status']}
+
+                """
+                await query.edit_message_text(formatted_order, parse_mode=ParseMode.MARKDOWN)
 
 # Function to handle the /start command
 async def menu_start(update: Update, context: CallbackContext) -> None:

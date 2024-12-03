@@ -68,13 +68,13 @@ async def check_order (orderId):
                         # shop_database[result["uuid"]] = result  # example store order                
                         if result["status"] == "received": 
                             logger.info(f"Order payed successfully: {result}")
-                            return (True, t("Order payed successfully: ") + str(result))
+                            return (True, result)
                         
                         elif result["status"] == "cancelled" or result["status"] == "failed": 
                             logger.warning(
                                 f"Order cancelled or failed  Status: {result}"
                             )
-                            return (False,  t("Order cancelled or failed  Status:") + str(result))
+                            return (False, result)
                     
                     else:
                         txt = await response.text()
@@ -88,7 +88,7 @@ async def check_order (orderId):
                 )
                 # return (False,  t("Failed to check order status:") + str(e))
 
-    return (False,  t("Order {orderId} wasn't payed for 1 hour,  make a new order, please.") )
+    return (False,  t(f"Order {orderId} wasn't payed for 1 hour,  make a new order, please.") )
 
 
 # async def get_shop_database(request):

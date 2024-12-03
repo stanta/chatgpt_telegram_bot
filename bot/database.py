@@ -120,9 +120,9 @@ class Database:
     def add_balance(self, user_id: int, amount: float):
         balance = self.get_user_attribute(user_id, "balance")
         if balance is None:
-            balance = amount # back compatibility for old users
+            balance = float(amount) # back compatibility for old users
         else:
-            balance += amount
+            balance += float(amount)
         self.set_user_attribute(user_id, "balance", balance)
 
     def get_dialog_messages(self, user_id: int, dialog_id: Optional[str] = None):
