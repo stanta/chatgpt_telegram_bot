@@ -7,6 +7,7 @@ RUN \
     python3-pip \
     build-essential \
     python3-venv \
+    python3-dev \
     ffmpeg \
     git \
     ; \
