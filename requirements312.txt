@@ -5,5 +5,4 @@ PyYAML==6.0.2
 pymongo==4.9
 python-dotenv==1.0.1
 python-i18n==0.3.9
-aiohttp==3.8.4
 aiohttp-cors==0.7.0
