@@ -411,8 +411,8 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
             if not db.check_balance_positive (update.message.from_user.id):
                 
                 await context.bot.send_message(
-                        update.message.reply_text,
-                        t("No enough balance, /buy tokens"),
+                        chat_id=update.message.chat_id,                        
+                        text= ("No enough balance 🥲, /buy tokens to top up 😎"),
                         parse_mode=ParseMode.HTML
                     )            
                 return 
@@ -885,6 +885,7 @@ async def show_balance_handle(update: Update, context: CallbackContext):
 
     # text = t("You spent <b>{dollars:.03f}$</b>\n").format(dollars=total_n_spent_dollars)
     text =  t("Your current balance: <b>{balance}</b> tokens\n\n").format(balance=balance)
+    text += t("to get more tokens, /buy \n\n")
     text += t("You totally spent <b>{tokens}</b> tokens\n\n").format(tokens=total_n_used_tokens)
     text += details_text
 

@@ -27,7 +27,7 @@ enable_message_streaming = config_yaml.get("enable_message_streaming", True)
 return_n_generated_images = config_yaml.get("return_n_generated_images", 1)
 image_size = config_yaml.get("image_size", "512x512")
 n_chat_modes_per_page = config_yaml.get("n_chat_modes_per_page", 5)
-init_user_balance = config_yaml.get("init_user_balance", 10)
+init_user_balance = config_yaml.get("init_user_balance", 100_000) #in tokens
 
 mongo_host=config_env.get("MONGO_HOST", "localhost")
 mongodb_uri = f"mongodb://{mongo_host}:{config_env['MONGODB_PORT']}"

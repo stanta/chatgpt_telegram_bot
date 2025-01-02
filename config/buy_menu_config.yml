@@ -2,7 +2,7 @@ ru:
   # menu:
     - text: "Покупка токенов Коуча: Выберите способ оплаты"
       buttons:
-        - text: "Покупка с карты"
+        - text: " (СКОРО!)Покупка с карты"
           action: ""
           params: ""
         - text: "Покупка за крипту"
@@ -57,7 +57,7 @@ en:
   # menu:
     - text: "Coach Token Purchase: Choose Payment Method"
       buttons:
-        - text: "Buy with Card"
+        - text: " (SOON!) Buy with Card"
           action: ""
           params: ""
         - text: "Buy with Crypto"

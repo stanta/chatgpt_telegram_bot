@@ -52,7 +52,7 @@ class Database:
             "n_generated_images": 0,
             "n_transcribed_seconds": 0.0,  # voice message transcription
             
-            "balance":config.init_user_balance # in USD
+            "balance":config.init_user_balance # in TOKENS
         }
 
         if not self.check_if_user_exists(user_id):
@@ -107,8 +107,8 @@ class Database:
                 "n_input_tokens": n_input_tokens,
                 "n_output_tokens": n_output_tokens
             }
-        balance -= n_input_tokens * config.models["info"][model]["price_per_1000_input_tokens"] * (n_input_tokens / 1000)
-        balance -= n_output_tokens * config.models["info"][model]["price_per_1000_output_tokens"] * (n_output_tokens / 1000)
+        balance -= n_input_tokens # * config.models["info"][model]["price_per_1000_input_tokens"] * (n_input_tokens / 1000)
+        balance -= n_output_tokens # * config.models["info"][model]["price_per_1000_output_tokens"] * (n_output_tokens / 1000)
 
         self.set_user_attribute(user_id, "n_used_tokens", n_used_tokens_dict)
         self.set_user_attribute(user_id, "balance", balance)
