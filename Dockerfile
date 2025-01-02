@@ -10,6 +10,8 @@ RUN \
     python3-dev \
     ffmpeg \
     git \
+    libffi-dev \
+    libssl-dev \
     ; \
     rm -rf /var/lib/apt/lists/*
 
@@ -21,4 +23,3 @@ COPY . /code
 WORKDIR /code
 
 CMD ["bash"]
-
