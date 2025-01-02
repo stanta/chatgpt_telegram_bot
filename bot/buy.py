@@ -112,7 +112,7 @@ async def button_handler(update: Update, context: CallbackContext) -> None:
                     - *Order ID:* {status['orderId']}
                     - *Status:* {status['status']}
                     
-                    🥲 Unfortunately NOT PAYED 🔴 
+                    🥲 Unfortunately NOT PAYED ❌    
                     """
                     await query.edit_message_text(formatted_status, parse_mode=ParseMode.MARKDOWN)
             else:
