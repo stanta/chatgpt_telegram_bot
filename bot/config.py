@@ -36,9 +36,9 @@ arcpay_url = config_yaml["arcpay_url"]
 arc_API_key = config_yaml["arc_API_key"]
 arc_private_key = config_yaml["arc_private_key"]
 
-youkassa_key = config_yaml["youkassa_key"]
-youkassa_shop_id = config_yaml["youkassa_shop_id"]
-
+yookassa_key = config_yaml["yookassa_key"]
+yookassa_shop_id = config_yaml["yookassa_shop_id"]
+yookassa_api_key = config_yaml["yookassa_api_key"]
 with open(config_dir / "chat_modes.yml", 'r') as f:
     chat_modes = yaml.safe_load(f)
 

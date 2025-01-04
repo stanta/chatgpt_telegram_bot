@@ -27,9 +27,6 @@ from telegram.ext import (
     filters
 )
 from telegram.constants import ParseMode, ChatAction
-# from telethon import TelegramClient, connection, utils 
-# import telethon
-# from tg_file_id.file_id import FileId
 import i18n
 from i18n import t
 from staff import tt

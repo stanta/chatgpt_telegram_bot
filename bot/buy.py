@@ -4,7 +4,9 @@ from telegram.constants import ParseMode
 import config
 from i18n import t
 from staff import tt
-from arcpay_server import create_order, check_order
+import arcpay_server
+import yookassa_server
+# import yookassa_GPT as yookassa_server
 import database
 
 db = database.Database()
@@ -71,42 +73,71 @@ async def button_handler(update: Update, context: CallbackContext) -> None:
         # Handle the final action
         action, *params = data.split(':')
         await query.edit_message_text(text=t(f"Your choice: {data}"))
-        if action == "create_order":
-            (order_created, order) = await create_order(params[0], params[1], params[2]) #currency, price, amount
-            if order_created :
-                # await query.edit_message_text(t(str(order) +
-                #     "\n Payment link: ") + order["paymentUrl"])
-                formatted_order = f"""
-                - *{order['title']}*
-                - *Order ID:* {order['orderId']}
-                - *Status:* {order['status']}
-                *Items:*
-                - *Item ID:* {order['items'][0]['itemId']}
-                - *Title:* {order['items'][0]['title']}
-                - *Description:* {order['items'][0]['description']}
-                - *Price:* {order['items'][0]['price']} {order['currency']}
-                - *Count:* {order['items'][0]['count']}
-                - *AMOUNT TO PAY:* {order['amount']} {order['currency']}
+        match action:
+            case "create_order":
+                payserver = arcpay_server
+            case "create_order_card_rf":
+                payserver = yookassa_server
+            case _:
+                return
+        (order_created, order) = await payserver.create_order(params[0], params[1], params[2]) #currency, price, amount
 
-                - [CLICK HERE TO PAY]({order['paymentUrl']})
+        if order_created :
+            match action:
+                case "create_order_card_rf":
 
-                """ 
-                
-                await query.edit_message_text(formatted_order, parse_mode=ParseMode.MARKDOWN)
-                (order_payed, status) = await check_order(order['uuid'])
-                if order_payed: 
-                    formatted_status = f"""
-                    *{status['title']}*
-                    - *Order ID:* {status['orderId']}
-                    - *Status:* {status['status']}
-                    *Transaction:*
-                    - *Hash:* {status['txn']['hash']}
-                    😇 PAYED SUCCESSFULLY ✅ 
-                    """
-                    await query.edit_message_text(formatted_status, parse_mode=ParseMode.MARKDOWN)
+                    formatted_order = f"""
+                    *{order['description']}*
+                    - *Order ID:* {order['metadata']['orderId']}
+                    - *Status:* {order['status']}
+                    - *AMOUNT TO PAY:* {order.amount.value} {order.amount.currency}
+
+                    - [CLICK HERE TO PAY]({order.confirmation.confirmation_url})
+
+                    """ 
+                    await query.edit_message_text(formatted_order, parse_mode=ParseMode.MARKDOWN)
+                    (order_payed, status) = await payserver.check_order(order.id) 
+                case "create_order": 
+                    formatted_order = f"""
+                    - *{order['title']}*
+                    - *Order ID:* {order['orderId']}
+                    - *Status:* {order['status']}
+                    *Items:*
+                    - *Item ID:* {order['items'][0]['itemId']}
+                    - *Title:* {order['items'][0]['title']}
+                    - *Description:* {order['items'][0]['description']}
+                    - *Price:* {order['items'][0]['price']} {order['currency']}
+                    - *Count:* {order['items'][0]['count']}
+                    - *AMOUNT TO PAY:* {order['amount']} {order['currency']}
+
+                    - [CLICK HERE TO PAY]({order['paymentUrl']})
+
+                    """                
+                    await query.edit_message_text(formatted_order, parse_mode=ParseMode.MARKDOWN)
+                    (order_payed, status) = await payserver.check_order(order['uuid'])
+            
+            if order_payed: 
+                match action:
+                    case "create_order":
+                        formatted_status = f"""
+                        *{status['title']}*
+                        - *Order ID:* {status['orderId']}
+                        - *Status:* {status['status']}
+                        *Transaction:*
+                        - *Hash:* {status['txn']['hash']}
+                        😇 PAYED SUCCESSFULLY ✅ 
+                        """
+                        await query.edit_message_text(formatted_status, parse_mode=ParseMode.MARKDOWN)
+                    case "create_order_card_rf":
+                        formatted_status = f"""
+                        *Order ID:* {status['metadata']['orderId']}
+                        *Status:* {status['captured_at']}
+                        😇 PAYED SUCCESSFULLY ✅ 
+                        """
+                        await query.edit_message_text(formatted_status, parse_mode=ParseMode.MARKDOWN)
                     
-                    db.add_balance(update.effective_user.id,  params[2])
-                else:
+                db.add_balance(update.effective_user.id,  params[2])
+            else:
                     formatted_status = f"""
                     *{status['title']}*
                     - *Order ID:* {status['orderId']}
@@ -115,7 +146,7 @@ async def button_handler(update: Update, context: CallbackContext) -> None:
                     🥲 Unfortunately NOT PAYED ❌    
                     """
                     await query.edit_message_text(formatted_status, parse_mode=ParseMode.MARKDOWN)
-            else:
+        else:
                 formatted_order = f"""
                 - *{order['title']}*
                 - *Order ID:* {order['orderId']}
@@ -123,7 +154,9 @@ async def button_handler(update: Update, context: CallbackContext) -> None:
 
                 """
                 await query.edit_message_text(formatted_order, parse_mode=ParseMode.MARKDOWN)
-
+        
+            
+            
 # Function to handle the /start command
 async def menu_start(update: Update, context: CallbackContext) -> None:
     context.user_data["menu_config"] = tt(config.buy_menu_config, update.message.from_user.language_code)
