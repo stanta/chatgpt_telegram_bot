@@ -6,19 +6,19 @@ ru:
           submenu:
               - text: "Выберите количество "
                 buttons:
-                - text: "500 руб - 1 млн YoursCoach токенов"
+                - text: "500руб-1млн YoursCoach токенов"
                   action: "create_order_card_rf"
                   params:
                     - "RUB"
                     - "0.0005"                      
                     - "1000000"
-                - text: "5 млн YoursCoach токенов - 22500 руб"
+                - text: "2250руб-5млн YoursCoach токенов"
                   action: "create_order_card_rf"
                   params:
                     - "RUB"
-                    - "0.00045"
+                    - "0.000225"
                     - "5000000"
-                - text: "10 млн YoursCoach токенов - 4400 руб"
+                - text: "4000руб-10млн YoursCoach токенов - "
                   action: "create_order_card_rf"
                   params:
                     - "RUB"
@@ -76,27 +76,27 @@ en:
   # menu:
     - text: "Coach Token Purchase: Choose Payment Method"
       buttons:
-        - text: "Buy with Card"
+        - text: "Buy with Russian Card "
           submenu:
                   - text: "Select Amount"
                     buttons:
-                      - text: "5 USD-1mln. YoursCoach tokens"
+                      - text: "500Rub-1mln.YoursCoach tokens"
                         action: "create_order_card_rf"
                         params:
-                          - "USD"
-                          - "0.000005"
+                          - "RUB"
+                          - "0.0005"
                           - "1000000"
-                      - text: "22.5USD -5mln. YoursCoach tokens"
+                      - text: "2250RUB-5mln.YoursCoach tokens"
                         action: "create_order_card_rf"
                         params:
-                          - "USD"
-                          - "0.0000045"
+                          - "RUB"
+                          - "0.000225"
                           - "5000000"
-                      - text: "40 USD-10mln. YoursCoach tokens"
+                      - text: "4000RUB-10mln.YoursCoach tokens"
                         action: "create_order_card_rf"
                         params:
-                          - "USD"
-                          - "0.000004"
+                          - "RUB"
+                          - "0.0004"
                           - "10000000"
         - text: "Buy with Crypto"
           submenu:

@@ -25,14 +25,14 @@ async def build_menu(menu_items, path=[]):
                 # Build callback data to identify the submenu path
                 submenu_path = path + [button['text']]
                 callback_data = 'submenu_' + '_'.join(submenu_path)
-                buttons.append(InlineKeyboardButton(button['text'], callback_data=callback_data))
+                keyboard.append([InlineKeyboardButton(button['text'], callback_data=callback_data)])
             else:
                 action = button['action']
                 params = button['params']
                 callback_data = create_callback_data(action, params)
-                buttons.append(InlineKeyboardButton(button['text'], callback_data=callback_data))
-        if buttons:
-            keyboard.append(buttons)
+                keyboard.append([InlineKeyboardButton(button['text'], callback_data=callback_data)])
+        # if buttons:
+        #     keyboard.append(buttons)
     if path:
         # Add a 'Back' button to go to the previous menu
         keyboard.append([InlineKeyboardButton(t("Back"), callback_data='back_' + '_'.join(path[:-1]))])
@@ -86,73 +86,79 @@ async def button_handler(update: Update, context: CallbackContext) -> None:
             match action:
                 case "create_order_card_rf":
 
-                    formatted_order = f"""
-                    *{order['description']}*
-                    - *Order ID:* {order['metadata']['orderId']}
-                    - *Status:* {order['status']}
-                    - *AMOUNT TO PAY:* {order.amount.value} {order.amount.currency}
+                    formatted_order = t(f"""
+    *{order['description']}*
+    - *Order ID:* {order['metadata']['orderId']}
+    - *Status:* {order['status']}
+    - *AMOUNT TO PAY:* {order.amount.value} {order.amount.currency}
 
-                    - [CLICK HERE TO PAY]({order.confirmation.confirmation_url})
+    - [CLICK HERE TO PAY]({order.confirmation.confirmation_url})
 
-                    """ 
+                    """) 
                     await query.edit_message_text(formatted_order, parse_mode=ParseMode.MARKDOWN)
                     (order_payed, status) = await payserver.check_order(order.id) 
                 case "create_order": 
-                    formatted_order = f"""
-                    - *{order['title']}*
-                    - *Order ID:* {order['orderId']}
-                    - *Status:* {order['status']}
-                    *Items:*
-                    - *Item ID:* {order['items'][0]['itemId']}
-                    - *Title:* {order['items'][0]['title']}
-                    - *Description:* {order['items'][0]['description']}
-                    - *Price:* {order['items'][0]['price']} {order['currency']}
-                    - *Count:* {order['items'][0]['count']}
-                    - *AMOUNT TO PAY:* {order['amount']} {order['currency']}
+                    formatted_order = t(f"""
+    - *{order['title']}*
+    - *Order ID:* {order['orderId']}
+    - *Status:* {order['status']}
+    *Items:*
+    - *Item ID:* {order['items'][0]['itemId']}
+    - *Title:* {order['items'][0]['title']}
+    - *Description:* {order['items'][0]['description']}
+    - *Price:* {order['items'][0]['price']} {order['currency']}
+    - *Count:* {order['items'][0]['count']}
+    - *AMOUNT TO PAY:* {order['amount']} {order['currency']}
 
-                    - [CLICK HERE TO PAY]({order['paymentUrl']})
+    - [CLICK HERE TO PAY]({order['paymentUrl']})
 
-                    """                
+                    """)                
                     await query.edit_message_text(formatted_order, parse_mode=ParseMode.MARKDOWN)
                     (order_payed, status) = await payserver.check_order(order['uuid'])
             
             if order_payed: 
                 match action:
                     case "create_order":
-                        formatted_status = f"""
-                        *{status['title']}*
-                        - *Order ID:* {status['orderId']}
-                        - *Status:* {status['status']}
-                        *Transaction:*
-                        - *Hash:* {status['txn']['hash']}
-                        😇 PAYED SUCCESSFULLY ✅ 
-                        """
+                        formatted_status = t(f"""
+    *{status['title']}*
+    - *Order ID:* {status['orderId']}
+    - *Status:* {status['status']}
+    *Transaction:*
+    - *Hash:* {status['txn']['hash']}
+    😇 PAYED SUCCESSFULLY ✅ 
+                """)
                         await query.edit_message_text(formatted_status, parse_mode=ParseMode.MARKDOWN)
                     case "create_order_card_rf":
-                        formatted_status = f"""
-                        *Order ID:* {status['metadata']['orderId']}
-                        *Status:* {status['captured_at']}
-                        😇 PAYED SUCCESSFULLY ✅ 
-                        """
+                        formatted_status = t(f"""
+    *Order ID:* {status['metadata']['orderId']}
+    *Payed:* {status['captured_at']}
+    😇 PAYED SUCCESSFULLY ✅ 
+        """)
                         await query.edit_message_text(formatted_status, parse_mode=ParseMode.MARKDOWN)
                     
                 db.add_balance(update.effective_user.id,  params[2])
             else:
-                    formatted_status = f"""
-                    *{status['title']}*
-                    - *Order ID:* {status['orderId']}
-                    - *Status:* {status['status']}
-                    
-                    🥲 Unfortunately NOT PAYED ❌    
-                    """
-                    await query.edit_message_text(formatted_status, parse_mode=ParseMode.MARKDOWN)
+                match action:
+                    case "create_order":           
+                        formatted_status = t(f"""
+    *{status['title']}*
+    - *Order ID:* {status['orderId']}
+    - *Status:* {status['status']}
+    🥲 Unfortunately NOT PAYED ❌    
+                    """)
+                    case "create_order_card_rf":
+                        formatted_status = t(f"""    
+    *Order ID:* {status}
+    🥲 Unfortunately NOT PAYED ❌    
+                    """)
+                await query.edit_message_text(formatted_status, parse_mode=ParseMode.MARKDOWN)
         else:
-                formatted_order = f"""
+                formatted_order = t(f"""
                 - *{order['title']}*
                 - *Order ID:* {order['orderId']}
                 - *Status:* {order['status']}
 
-                """
+                """)
                 await query.edit_message_text(formatted_order, parse_mode=ParseMode.MARKDOWN)
         
             
