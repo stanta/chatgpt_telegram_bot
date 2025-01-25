@@ -15,6 +15,9 @@ services:
     container_name: chatgpt_telegram_bot_yc
     command: python3 bot/bot.py
     restart: always
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL}
     build:
       context: "."
       dockerfile: Dockerfile
