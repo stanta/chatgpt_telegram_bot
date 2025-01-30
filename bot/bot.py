@@ -144,7 +144,7 @@ async def start_handle(update: Update, context: CallbackContext):
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
     db.start_new_dialog(user_id)
 
-    reply_text = t("Hi! I'm <b>YoursCoach</b> bot🤖\n\n")
+    reply_text = t("Hi! I'm <b>ExamsCoach</b> bot🤖\n\n")
     reply_text += tt (HELP_MESSAGE, update.message.from_user.language_code) 
 
     await update.message.reply_text(reply_text, parse_mode=ParseMode.HTML)

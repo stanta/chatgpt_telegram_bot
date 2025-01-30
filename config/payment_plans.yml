@@ -1,10 +1,10 @@
 payment_plans:
-  title: "YoursCoach Token plans"
+  title: "ExamsCoach Token plans"
   orderId: "INV-{{ datetime.now().strftime('%Y%m%d%H%M%S') }}"
   currency: "TON"
   items:
     - title: "1 mln tokens"
-      description: "1 000 000 tokens of YoursCoach platform"
+      description: "1 000 000 tokens of ExamsCoach platform"
       imageUrl: ""
       price: 2
       count: 1000000

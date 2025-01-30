@@ -33,7 +33,7 @@ async def create_order(currency, price, amount):
             "capture": True,
             "description": f"Order for {amount} tokens",
             "metadata": {
-                "orderId": f"INV-YOURSCOACH-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+                "orderId": f"INV-ExamsCoach-{datetime.now().strftime('%Y%m%d%H%M%S')}"
             }
         }
 

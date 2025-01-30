@@ -1,5 +1,5 @@
 {
-    "Hi! I'm <b>YoursCoach</b> bot🤖\n\n": "嗨！我是<b>你的教练</b>机器人🤖\n\n",
+    "Hi! I'm <b>ExamsCoach</b> bot🤖\n\n": "嗨！我是<b>你的教练</b>机器人🤖\n\n",
     "No message to retry 🤷‍♂️": "没有消息可以重试 🤷‍♂️",
     "🥲 Images processing is only available for <b>gpt-4-vision-preview</b> and <b>gpt-4o</b> model. Please change your settings in /settings": "🥲 图像处理仅适用于<b>gpt-4-vision-preview</b>和<b>gpt-4o</b>模型。请在/settings中更改设置",
     "Starting new dialog due to timeout (<b>{config.chat_modes[chat_mode]['name']}</b> mode) ✅": "由于超时，正在启动新对话（模式<b>{config.chat_modes[chat_mode]['name']}</b>） ✅",

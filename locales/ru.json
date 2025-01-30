@@ -1,5 +1,5 @@
 {
-    "Hi! I'm <b>YoursCoach</b> bot🤖\n\n": "Привет! Я - <b>ТвойТренер</b> 🤖\n\n",
+    "Hi! I'm <b>ExamsCoach</b> bot🤖\n\n": "Привет! Я - <b>ИИ репетитор</b> 🤖\n\n",
     "No message to retry 🤷‍♂️": "Нет сообщения для повторной попытки 🤷‍♂️",
     "🥲 Images processing is only available for <b>gpt-4-vision-preview</b> and <b>gpt-4o</b> model. Please change your settings in /settings": "🥲 Обработка изображений доступна только для моделей <b>gpt-4-vision-preview</b> и <b>gpt-4o</b>. Пожалуйста, измените настройки в /settings",
     "Starting new dialog due to timeout (<b>{config.chat_modes[chat_mode]['name']}</b> mode) ✅": "Начинаю новый диалог из-за тайм-аута (режим <b>{config.chat_modes[chat_mode]['name']}</b>) ✅",

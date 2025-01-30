@@ -1,5 +1,5 @@
 {
-    "Hi! I'm <b>YoursCoach</b> bot🤖\n\n": "سلام! من ربات <b>مربیشما</b> هستم🤖\n\n",
+    "Hi! I'm <b>ExamsCoach</b> bot🤖\n\n": "سلام! من ربات <b>مربیشما</b> هستم🤖\n\n",
     "No message to retry 🤷‍♂️": "پیامی برای تلاش مجدد وجود ندارد 🤷‍♂️",
     "🥲 Images processing is only available for <b>gpt-4-vision-preview</b> and <b>gpt-4o</b> model. Please change your settings in /settings": "🥲 پردازش تصاویر فقط برای مدل‌های <b>gpt-4-vision-preview</b> و <b>gpt-4o</b> موجود است. لطفاً تنظیمات خود را در /settings تغییر دهید",
     "Starting new dialog due to timeout (<b>{config.chat_modes[chat_mode]['name']}</b> mode) ✅": "شروع دیالوگ جدید به دلیل اتمام زمان (حالت <b>{config.chat_modes[chat_mode]['name']}</b>) ✅",

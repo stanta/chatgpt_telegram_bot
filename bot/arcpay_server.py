@@ -30,7 +30,7 @@ async def create_order(currency, price, amount ):
 
     data = config.payment_plans['payment_plans']
     data['currency'] = currency
-    data['orderId'] = "INV-YOURSCOACH-" + datetime.now().strftime('%Y%m%d%H%M%S')    
+    data['orderId'] = "INV-ExamsCoach-" + datetime.now().strftime('%Y%m%d%H%M%S')    
     data['items'][0]['title'] = amount + " tokens"
     data['items'][0]['price'] = price
     data['items'][0]['count'] = amount
