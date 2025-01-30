@@ -976,10 +976,10 @@ def run_bot() -> None:
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND & user_filter, message_handle))
     application.add_handler(MessageHandler(filters.Document.TEXT & user_filter, textdoc_message_handle))
 
-    application.add_handler(MessageHandler(filters.PHOTO & ~filters.COMMAND & user_filter, message_handle))
+    application.add_handler(MessageHandler(filters.PHOTO & ~filters.COMMAND & user_filter, unsupport_message_handle)) #message_handle
     application.add_handler(MessageHandler(filters.VIDEO & ~filters.COMMAND & user_filter, unsupport_message_handle))
-    application.add_handler(MessageHandler(filters.VOICE & user_filter, voice_message_handle))
-    application.add_handler(MessageHandler(filters.AUDIO & user_filter, audio_message_handle))
+    application.add_handler(MessageHandler(filters.VOICE & user_filter, unsupport_message_handle )) #voice_message_handle
+    application.add_handler(MessageHandler(filters.AUDIO & user_filter,unsupport_message_handle )) #audio_message_handle
     application.add_handler(MessageHandler(filters.Document.ALL & ~filters.COMMAND & ~filters.Document.TEXT & user_filter, unsupport_message_handle))
 
     application.add_handler(CommandHandler("retry", retry_handle, filters=user_filter))
