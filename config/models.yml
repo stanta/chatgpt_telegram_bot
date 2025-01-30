@@ -10,6 +10,10 @@ info:
     price_per_1000_input_tokens: 0.00065
     price_per_1000_output_tokens: 0.00065
     tokens_per_symbol: 0.75
+    scores:
+      Smart: 5
+      Fast: 4
+      Cheap: 5
 
   gpt-3.5-turbo:
     type: chat_completion
