@@ -7,8 +7,8 @@ import tiktoken
 import openai
 from openai import AsyncOpenAI, OpenAI
 
-client = AsyncOpenAI(api_key=config.openai_api_key)
-#client = OpenAI(api_key=config.openai_api_key)
+# client = AsyncOpenAI(api_key=config.openai_api_key)
+client = OpenAI(api_key=config.openai_api_key)
 
 
 # setup openai
@@ -23,17 +23,36 @@ logger = logging.getLogger(__name__)
 
 OPENAI_COMPLETION_OPTIONS = {
     "temperature": 0.7,
-    "max_tokens": 1000,
+    "max_tokens": 2048,
     "top_p": 1,
     "frequency_penalty": 0,
     "presence_penalty": 0,
-    "request_timeout": 60.0,
+    # "include_usage": True
+    # "request_timeout": 60.0,
 }
 
+TOKEN_LEN = 3
+def len_in_tokens (tokens):
+    tokens = tokens.split(' ')
+    lentok = 0
+    for token in tokens:
+        if len(token) > 0 and len(token) < TOKEN_LEN:
+            lentok += 1
+        else:
+            lentok += int(len(token) / TOKEN_LEN) + 1
+    return lentok
+                    
+                    
+def calculate_total_content_length(messages):
+    total_length = 0
+    for message in messages:
+        if 'content' in message:
+                total_length += len_in_tokens (message['content'])
+    return total_length
 
 class ChatGPT:
     def __init__(self, model="gpt-3.5-turbo"):
-        assert model in {"text-davinci-003", "gpt-3.5-turbo-16k", "gpt-3.5-turbo", "gpt-4", "gpt-4o", "gpt-4-turbo", "gpt-4-vision-preview"}, f"Unknown model: {model}"
+        assert model in config.models['available_text_models'], f"Unknown model: {model}"
         self.model = model
 
     async def send_message(self, message, dialog_messages=[], chat_mode="assistant"):
@@ -42,15 +61,17 @@ class ChatGPT:
 
         n_dialog_messages_before = len(dialog_messages)
         answer = None
+        n_input_tokens = 0
+        n_output_tokens = 0
         while answer is None:
             try:
-                if self.model in {"gpt-3.5-turbo-16k", "gpt-3.5-turbo", "gpt-4", "gpt-4o", "gpt-4-turbo", "gpt-4-vision-preview", "gpt-4-turbo"}:
+                if self.model in config.models['available_text_models'] and config.models['info'][self.model]['type'] == 'chat_completion' :
                     messages = self._generate_prompt_messages(message, dialog_messages, chat_mode)
 
                     r = client.chat.completions.create(model=self.model,
                     messages=messages,
                     **OPENAI_COMPLETION_OPTIONS)
-                    answer = r.choices[0].message["content"]
+                    answer = r.choices[0].message.content
                 elif self.model == "text-davinci-003":
                     prompt = self._generate_prompt(message, dialog_messages, chat_mode)
                     r = client.completions.create(engine=self.model,
@@ -61,7 +82,10 @@ class ChatGPT:
                     raise ValueError(f"Unknown model: {self.model}")
 
                 answer = self._postprocess_answer(answer)
-                n_input_tokens, n_output_tokens = r.usage.prompt_tokens, r.usage.completion_tokens
+                #TODO: fix this tokens!
+                #n_input_tokens, n_output_tokens = r.usage.prompt_tokens, r.usage.completion_tokens
+                n_input_tokens = calculate_total_content_length(messages)
+                n_output_tokens = len_in_tokens(answer)
             except openai.InvalidRequestError as e:  # too many tokens
                 if len(dialog_messages) == 0:
                     raise ValueError("Dialog messages is reduced to zero, but still has too many tokens to make completion") from e
@@ -79,18 +103,22 @@ class ChatGPT:
 
         n_dialog_messages_before = len(dialog_messages)
         answer = None
+        n_input_tokens = 0
+        n_output_tokens = 0
+        n_first_dialog_messages_removed = 0
         while answer is None:
             try:
-                if self.model in {"gpt-3.5-turbo-16k", "gpt-3.5-turbo", "gpt-4","gpt-4o", "gpt-4-turbo"}:
+                if self.model in config.models['available_text_models'] and config.models['info'][self.model]['type'] == 'chat_completion' :
                     messages = self._generate_prompt_messages(message, dialog_messages, chat_mode)
 
                     r_gen = client.chat.completions.create(model=self.model,
-                    messages=messages,
-                    stream=True,
-                    **OPENAI_COMPLETION_OPTIONS)
+                    # r_gen =  openai.ChatCompletion.create(
+                        messages=messages,
+                        stream=True,
+                        **OPENAI_COMPLETION_OPTIONS)
 
                     answer = ""
-                    async for r_item in r_gen:
+                    for r_item in r_gen:
                         delta = r_item.choices[0].delta
 
                         if "content" in delta:
@@ -234,7 +262,7 @@ class ChatGPT:
             prompt += "Chat:\n"
             for dialog_message in dialog_messages:
                 prompt += f"User: {dialog_message['user']}\n"
-                prompt += f"Assistant: {dialog_message['bot']}\n"
+                prompt += f"Assistant: {dialog_message['assistant']}\n"
 
         # current message
         prompt += f"User: {message}\n"
@@ -248,33 +276,34 @@ class ChatGPT:
     def _generate_prompt_messages(self, message, dialog_messages, chat_mode, image_buffer: BytesIO = None):
         prompt = config.chat_modes[chat_mode]["prompt_start"]
 
-        messages = [{"role": "system", "content": prompt}]
+        messages = [{"role": "assistant", "content": prompt}]
 
         for dialog_message in dialog_messages:
-            messages.append({"role": "user", "content": dialog_message["user"]})
-            messages.append({"role": "assistant", "content": dialog_message["bot"]})
+            messages.append({"role": "user", "content": dialog_message["user"][0]['text']})
+            messages.append({"role": "assistant", "content": dialog_message["assistant"]})
 
         if image_buffer is not None:
-            messages.append(
-                {
-                    "role": "user", 
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": message,
-                        },
-                        {
-                            "type": "image_url",
-                            "image_url" : {
+            pass
+            # messages.append(
+            #     {
+            #         "role": "user", 
+            #         "content": [
+            #             {
+            #                 "type": "text",
+            #                 "text": message,
+            #             },
+            #             {
+            #                 "type": "image_url",
+            #                 "image_url" : {
 
-                                "url": f"data:image/jpeg;base64,{self._encode_image(image_buffer)}",
-                                "detail":"high"
-                            }
-                        }
-                    ]
-                }
+            #                     "url": f"data:image/jpeg;base64,{self._encode_image(image_buffer)}",
+            #                     "detail":"high"
+            #                 }
+            #             }
+            #         ]
+            #     }
 
-            )
+            # )
         else:
             messages.append({"role": "user", "content": message})
 

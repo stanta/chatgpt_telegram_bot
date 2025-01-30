@@ -6,7 +6,10 @@
 + 4. format Order payed successfully: {'title': 'YoursCoach Token plans', 'orderId': 'INV-YOURSCOACH-20241126094316', 'currency': 'TON', 'items': [{'title': '10000 tokens', 'description': '1 000 000 tokens of YoursCoach platform', 'imageUrl': '', 'price': 1e-06, 'count': 10000, 'itemId': '1'}], 'meta': {'telegram_id': "{{ request_data['telegram_id'] if 'telegram_id' in request_data else None }}"}, 'captured': False, 'uuid': 'a9128de7-292e-43a4-92f5-f587e00509df', 'createdAt': '2024-11-26T06:43:16.816458Z', 'status': 'received', 'amount': 0.01, 'testnet': False, 'txn': {'hash': '83cdc3f2f4cd7544ef2af587aeedb51234a470682173d799540343ce90c37856', 'lt': 51266068000001}, 'customer': {'wallet': 'UQAcN34WzfKv6lOv4V4jJ_b85bEaBRLg7aAmnlK7pO-fmtz2'}, 'paymentUrl': None}
 
 
-5. добавить в поле баланса /buy
-6. проверить работу при нулевом балансе 
++5. добавить в поле баланса /buy
++6. проверить работу при нулевом балансе 
 
-7. bot/yookassa_server.py:16  #TODO: change to get  this from config or from bot data
++7. bot/yookassa_server.py:16  #TODO: change to get  this from config or from bot data
+
+8. контекст ответа на сообщзение
++9. расчет токенов 

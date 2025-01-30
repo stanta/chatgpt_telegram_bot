@@ -6,23 +6,23 @@ ru:
           submenu:
               - text: "Выберите количество "
                 buttons:
-                - text: "500руб-1млн YoursCoach токенов"
+                - text: "150руб-1млн ExamsCoach токенов"
                   action: "create_order_card_rf"
                   params:
                     - "RUB"
-                    - "0.0005"                      
+                    - "0.00015"                      
                     - "1000000"
-                - text: "2250руб-5млн YoursCoach токенов"
+                - text: "700руб-5млн ExamsCoach токенов"
                   action: "create_order_card_rf"
                   params:
                     - "RUB"
-                    - "0.000225"
+                    - "0.0007"
                     - "5000000"
-                - text: "4000руб-10млн YoursCoach токенов - "
+                - text: "1200руб-10млн ExamsCoach токенов - "
                   action: "create_order_card_rf"
                   params:
                     - "RUB"
-                    - "0.0004" 
+                    - "0.0012" 
                     - "10000000" 
         - text: "Покупка за крипту"
           submenu:
@@ -32,45 +32,45 @@ ru:
               submenu:
               - text: "Выберите количество "
                 buttons:
-                - text: "0.01 ТОН-0.01 млн YoursCoach токенов"
+                - text: "0.3 ТОН-1 млн ExamsCoach токенов"
                   action: "create_order"
                   params:
                     - "TON"
-                    - "0.000001"       
-                    - "10000"               
-                - text: "4.5 ТОН-5 млн YoursCoach токенов "
+                    - "0.0000003"
+                    - "1000000"               
+                - text: "1.5 ТОН-6 млн ExamsCoach токенов "
                   action: "create_order"
                   params:
                     - "TON"
-                    - "0.0000009"
-                    - "5000000"
-                - text: "7 ТОН-10 млн YoursCoach токенов"
+                    - "0.00000025"
+                    - "6000000"
+                - text: "2 ТОН-10 млн ExamsCoach токенов"
                   action: "create_order"
                   params:
                     - "TON"
-                    - "0.000007"    
+                    - "0.0000002"    
                     - "10000000"                                                
             - text: "за USDT"
               submenu:
               - text: "Выберите количество "
                 buttons:
-                - text: "5 USDT - 1 млн YoursCoach токенов"
+                - text: "1.5 USDT - 1 млн ExamsCoach токенов"
                   action: "create_order"
                   params:
                     - "USDT"
-                    - "0.000005"                      
+                    - "0.0000015"                      
                     - "1000000"
-                - text: "5 млн YoursCoach токенов - 22.5 USDT"
+                - text: "7 USDT - 5 млн ExamsCoach токенов "
                   action: "create_order"
                   params:
                     - "USDT"
-                    - "0.0000045"
+                    - "0.0000014"
                     - "5000000"
-                - text: "10 млн YoursCoach токенов - 40 USDT"
+                - text: "12 USDT за 10 млн ExamsCoach токенов "
                   action: "create_order"
                   params:
                     - "USDT"
-                    - "0.000004" 
+                    - "0.0000012" 
                     - "10000000"                                                   
 en:
   # menu:
@@ -80,23 +80,23 @@ en:
           submenu:
                   - text: "Select Amount"
                     buttons:
-                      - text: "500Rub-1mln.YoursCoach tokens"
+                      - text: "159Rub-1mln.ExamsCoach tokens"
                         action: "create_order_card_rf"
                         params:
                           - "RUB"
-                          - "0.0005"
+                          - "0.00015"                      
                           - "1000000"
-                      - text: "2250RUB-5mln.YoursCoach tokens"
+                      - text: "700RUB-5mln.ExamsCoach tokens"
                         action: "create_order_card_rf"
                         params:
                           - "RUB"
-                          - "0.000225"
+                          - "0.0007"
                           - "5000000"
-                      - text: "4000RUB-10mln.YoursCoach tokens"
+                      - text: "1200RUB-10mln.ExamsCoach tokens"
                         action: "create_order_card_rf"
                         params:
                           - "RUB"
-                          - "0.0004"
+                          - "0.0012"
                           - "10000000"
         - text: "Buy with Crypto"
           submenu:
@@ -106,43 +106,43 @@ en:
                 submenu:
                   - text: "Select Amount"
                     buttons:
-                      - text: "1TON-1mln. YoursCoach tokens"
+                      - text: "0.3TON-1mln. ExamsCoach tokens"
                         action: "create_order"
                         params:
                           - "TON"
-                          - "0.000001"
+                          - "0.0000003"
                           - "1000000"
-                      - text: "4.5TON-5mln. YoursCoach tokens"
+                      - text: "1.5TON-6mln. ExamsCoach tokens"
                         action: "create_order"
                         params:
                           - "TON"
-                          - "0.0000009"
-                          - "5000000"
-                      - text: "7TON-10mln. YoursCoach tokens"
+                          - "0.00000025"
+                          - "6000000"
+                      - text: "2TON-10mln. ExamsCoach tokens"
                         action: "create_order"
                         params:
                           - "TON"
-                          - "0.000007"
+                          - "0.0000002"
                           - "10000000"
               - text: "for USDT"
                 submenu:
                   - text: "Select Amount"
                     buttons:
-                      - text: "5USDT-1mln. YoursCoach tokens"
+                      - text: "1.5USDT-1mln. ExamsCoach tokens"
                         action: "create_order"
                         params:
                           - "USDT"
-                          - "0.000005"
+                          - "0.0000015"
                           - "1000000"
-                      - text: "22.5USDT-5mln. YoursCoach tokens"
+                      - text: "7USDT-5mln. ExamsCoach tokens"
                         action: "create_order"
                         params:
                           - "USDT"
-                          - "0.0000045"
+                          - "0.0000014"
                           - "5000000"
-                      - text: "40-USDT-10mln. YoursCoach tokens"
+                      - text: "12USDT-10mln. ExamsCoach tokens"
                         action: "create_order"
                         params:
                           - "USDT"
-                          - "0.000004"
+                          - "0.0000012"
                           - "10000000"

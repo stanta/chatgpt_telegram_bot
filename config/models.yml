@@ -1,12 +1,21 @@
-available_text_models: ["gpt-4-turbo"]
+available_text_models: ["llama3.3-70b-instruct"]
 # "gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4-turbo", "gpt-4-vision-preview", "gpt-4", "text-davinci-003",
 info:
+  llama3.3-70b-instruct:
+    type: chat_completion
+    name: llama3.3
+    description:  
+      en: Llama.3. 70B trained  128K context window  It's <b>conversational</b> and <b>knowledgeable</b>. Ideal for discussions and explanations. If there are some topics it can't cover, try asking me about <b>education and learning materials</b>..
+      ru: Llama.3.3 70 млрд токенов  128К окно контекста. Это <b> разговорная </b> языковая модель. Идеально подходит для дискуссий и объяснений. Если есть какие-то темы, которые он не может охватить, попробуйте спросить меня об образовании и учебных материалах..
+    price_per_1000_input_tokens: 0.00065
+    price_per_1000_output_tokens: 0.00065
+    tokens_per_symbol: 0.75
+
   gpt-3.5-turbo:
     type: chat_completion
     name: ChatGPT
     description:  
       en: ChatGPT is that well-known model. It's <b>fast</b> and <b>cheap</b>. Ideal for everyday tasks. If there are some tasks it can't handle, try the <b>GPT-4</b>.
-
     price_per_1000_input_tokens: 0.0015
     price_per_1000_output_tokens: 0.002
 

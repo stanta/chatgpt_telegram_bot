@@ -4,6 +4,7 @@ import asyncio
 import traceback
 import html
 import json
+from markdown import markdown
 from datetime import datetime
 from os import path
 import openai
@@ -27,6 +28,8 @@ from telegram.ext import (
     filters
 )
 from telegram.constants import ParseMode, ChatAction
+
+
 import i18n
 from i18n import t
 from staff import tt
@@ -414,9 +417,11 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
                     )            
                 return 
             
-            chatgpt_instance = openai_assistant_utils.ChatGPT(model=current_model)
+            chatgpt_instance = openai_utils.ChatGPT(model=current_model) 
             if config.enable_message_streaming:
-                gen =  chatgpt_instance.send_message_stream(_message, user_id,  dialog_messages=dialog_messages, chat_mode=chat_mode)
+                # gen =  chatgpt_instance.send_message_stream(_message, user_id,  dialog_messages=dialog_messages, chat_mode=chat_mode)
+                gen = chatgpt_instance.send_message_stream(_message, dialog_messages=dialog_messages, chat_mode=chat_mode)
+
             else:
                 answer, (n_input_tokens, n_output_tokens), n_first_dialog_messages_removed = await chatgpt_instance.send_message(
                     _message,
@@ -441,19 +446,26 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
                     continue
 
                 try:
-                    await context.bot.edit_message_text(answer, chat_id=placeholder_message.chat_id, message_id=placeholder_message.message_id, parse_mode=parse_mode)
+                    if parse_mode == ParseMode.HTML:
+                        escaped_answer = html.escape(answer)  # Escape special characters for HTML
+                    elif parse_mode == ParseMode.MARKDOWN:
+                        escaped_answer = markdown(answer)  # Escape special characters for Markdown
+                    else:
+                        escaped_answer = answer
+                    await context.bot.edit_message_text(escaped_answer, chat_id=placeholder_message.chat_id, message_id=placeholder_message.message_id, parse_mode=parse_mode)
                 except telegram.error.BadRequest as e:
-                    if str(e).startswith(t("Message is not modified")):
+                    if str(e).startswith("Message is not modified"):
                         continue
                     else:
-                        await context.bot.edit_message_text(answer, chat_id=placeholder_message.chat_id, message_id=placeholder_message.message_id)
+                        await context.bot.edit_message_text(escaped_answer, chat_id=placeholder_message.chat_id, message_id=placeholder_message.message_id)
+
 
                 await asyncio.sleep(0.01)  # wait a bit to avoid flooding
                 
                 prev_answer = answer
             
             # update user data
-            new_dialog_message = {"user": [{"type": "text", "text": _message}], "bot": answer, "date": datetime.now()}
+            new_dialog_message = {"user": [{"type": "text", "text": _message}], "assistant": answer, "date": datetime.now()}
 
             db.set_dialog_messages(
                 user_id,
