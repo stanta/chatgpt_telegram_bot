@@ -6,19 +6,19 @@ ru:
           submenu:
               - text: "Выберите количество "
                 buttons:
-                - text: "1звезд-10000 ExamsCoach токенов"
+                - text: "100звезд-1 000 000 ExamsCoach токенов"
                   action: "create_order_stars"
                   params:
                     - "XTR"
                     - "0.0001"                      
                     - "10000"
-                - text: "450звезд-5млн ExamsCoach токенов"
+                - text: "450звезд-5 000 000 ExamsCoach токенов"
                   action: "create_order_stars"
                   params:
                     - "XTR"
                     - "0.00009"
                     - "5000000"
-                - text: "800звезд-10млн ExamsCoach токенов - "
+                - text: "800звезд-10 000 000 ExamsCoach токенов - "
                   action: "create_order_stars"
                   params:
                     - "XTR"
