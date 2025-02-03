@@ -6,6 +6,8 @@ import logging
 import asyncio
 from aiohttp import web, ClientSession
 from datetime import datetime
+from telegram import Update, LabeledPrice
+from telegram.ext import CallbackContext
 # import aiohttp_cors
 import config
 import database
@@ -20,7 +22,7 @@ db = database.Database()
 logger = logging.getLogger(__name__)
 
 
-async def create_order(currency, price, amount ):
+async def create_order(currency, price, amount):
 
     # request_data = await request.json()
 
@@ -30,7 +32,7 @@ async def create_order(currency, price, amount ):
 
     data = config.payment_plans['payment_plans']
     data['currency'] = currency
-    data['orderId'] = "INV-ExamsCoach-" + datetime.now().strftime('%Y%m%d%H%M%S')    
+    data['orderId'] = "INV-ExamsCoach-"+ currency +"-"+ datetime.now().strftime('%Y%m%d%H%M%S')    
     data['items'][0]['title'] = amount + " tokens"
     data['items'][0]['price'] = price
     data['items'][0]['count'] = amount

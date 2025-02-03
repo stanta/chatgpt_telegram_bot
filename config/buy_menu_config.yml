@@ -2,6 +2,28 @@ ru:
   # menu:
     - text: "Покупка токенов Коуча: Выберите способ оплаты"
       buttons:
+        - text: "Покупка за Телеграм звезды"
+          submenu:
+              - text: "Выберите количество "
+                buttons:
+                - text: "1звезд-10000 ExamsCoach токенов"
+                  action: "create_order_stars"
+                  params:
+                    - "XTR"
+                    - "0.0001"                      
+                    - "10000"
+                - text: "450звезд-5млн ExamsCoach токенов"
+                  action: "create_order_stars"
+                  params:
+                    - "XTR"
+                    - "0.00009"
+                    - "5000000"
+                - text: "800звезд-10млн ExamsCoach токенов - "
+                  action: "create_order_stars"
+                  params:
+                    - "XTR"
+                    - "0.00008" 
+                    - "10000000"       
         - text: "Покупка с карты РФ"
           submenu:
               - text: "Выберите количество "
@@ -76,6 +98,28 @@ en:
   # menu:
     - text: "Coach Token Purchase: Choose Payment Method"
       buttons:
+        - text: "Buy with Telegram stars"
+          submenu:
+            - text: "Select the quantity"
+              buttons:
+                - text: "100stars - 1 million ExamsCoach tokens"
+                  action: "create_order_stars"
+                  params:
+                    - "XTR"
+                    - "0.0001"                      
+                    - "1000000"
+                - text: "450stars - 5 million ExamsCoach tokens"
+                  action: "create_order_stars"
+                  params:
+                    - "XTR"
+                    - "0.00009"
+                    - "5000000"
+                - text: "800stars - 10 million ExamsCoach tokens"
+                  action: "create_order_stars"
+                  params:
+                    - "XTR"
+                    - "0.00008" 
+                    - "10000000"      
         - text: "Buy with Russian Card "
           submenu:
                   - text: "Select Amount"

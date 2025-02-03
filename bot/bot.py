@@ -25,7 +25,8 @@ from telegram.ext import (
     MessageHandler,
     CallbackQueryHandler,
     AIORateLimiter,
-    filters
+    filters,
+    PreCheckoutQueryHandler
 )
 from telegram.constants import ParseMode, ChatAction
 
@@ -40,6 +41,7 @@ import database
 import openai_utils
 import openai_assistant_utils
 
+from stars_server import precheckout_callback, successful_payment_callback
 
 ROOT_DIR = path.abspath(".")
 localedir = path.join(ROOT_DIR, 'locales')
@@ -999,7 +1001,11 @@ def run_bot() -> None:
     application.add_handler(CommandHandler("buy", menu_start, filters=user_filter))
     application.add_handler(CallbackQueryHandler(button_handler))
     application.add_error_handler(error_handle)
+    
     #TODO - rewrite main menu to use only menu_config.yml
+    
+    application.add_handler(PreCheckoutQueryHandler(precheckout_callback))
+    application.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment_callback))
 
     # start the bot
     logger.info(t('bot started...'))

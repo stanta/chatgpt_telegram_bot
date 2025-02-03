@@ -7,6 +7,8 @@ import asyncio
 import uuid
 from aiohttp import web, ClientSession
 from datetime import datetime
+from telegram import Update, LabeledPrice
+from telegram.ext import CallbackContext
 import yookassa
 import config
 import database
@@ -33,7 +35,7 @@ async def create_order(currency, price, amount):
             "capture": True,
             "description": f"Order for {amount} tokens",
             "metadata": {
-                "orderId": f"INV-ExamsCoach-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+                "orderId": f"INV-{currency}-ExamsCoach-{datetime.now().strftime('%Y%m%d%H%M%S')}"
             }
         }
 

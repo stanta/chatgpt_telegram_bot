@@ -6,6 +6,7 @@ from i18n import t
 from staff import tt
 import arcpay_server
 import yookassa_server
+import stars_server
 # import yookassa_GPT as yookassa_server
 import database
 
@@ -16,7 +17,7 @@ def create_callback_data(action, params):
     return f"{action}:{':'.join(params)}"
 
 # Recursive function to build the menu
-async def build_menu(menu_items, path=[]):
+async def build_menu(menu_items, update: Update,  context: CallbackContext, path=[]):
     keyboard = []
     for item in menu_items:
         buttons = []
@@ -55,7 +56,7 @@ async def button_handler(update: Update, context: CallbackContext) -> None:
                     if button['text'] == p:
                         submenu = button.get('submenu', [])
                         break
-        reply_markup = await build_menu(submenu, path=path)
+        reply_markup = await build_menu(submenu, update, context, path=path)
         await query.edit_message_text(text=t("Choose option:"), reply_markup=reply_markup)
     elif data.startswith('back_'):
         # Handle the 'Back' action
@@ -67,7 +68,7 @@ async def button_handler(update: Update, context: CallbackContext) -> None:
                     if button['text'] == p:
                         submenu = button.get('submenu', [])
                         break
-        reply_markup = await build_menu(submenu, path=path)
+        reply_markup = await build_menu(submenu, update, context,  path=path)
         await query.edit_message_text(text=t("Choose option:"), reply_markup=reply_markup)
     else:
         # Handle the final action
@@ -76,16 +77,22 @@ async def button_handler(update: Update, context: CallbackContext) -> None:
         match action:
             case "create_order":
                 payserver = arcpay_server
+                (order_created, order) = await payserver.create_order(params[0], params[1], params[2]) #currency, price, amount
+                
             case "create_order_card_rf":
                 payserver = yookassa_server
+                (order_created, order) = await payserver.create_order(params[0], params[1], params[2]) #currency, price, amount
+                
+            case "create_order_stars":
+                payserver = stars_server
+                (order_created, order) = await payserver.create_order(params[0], params[1], params[2], update, context) #currency, price, amount
+
             case _:
                 return
-        (order_created, order) = await payserver.create_order(params[0], params[1], params[2]) #currency, price, amount
 
         if order_created :
             match action:
                 case "create_order_card_rf":
-
                     formatted_order = t(f"""
     *{order['description']}*
     - *Order ID:* {order['metadata']['orderId']}
@@ -96,7 +103,6 @@ async def button_handler(update: Update, context: CallbackContext) -> None:
 
                     """) 
                     await query.edit_message_text(formatted_order, parse_mode=ParseMode.MARKDOWN)
-                    (order_payed, status) = await payserver.check_order(order.id) 
                 case "create_order": 
                     formatted_order = t(f"""
     - *{order['title']}*
@@ -114,7 +120,7 @@ async def button_handler(update: Update, context: CallbackContext) -> None:
 
                     """)                
                     await query.edit_message_text(formatted_order, parse_mode=ParseMode.MARKDOWN)
-                    (order_payed, status) = await payserver.check_order(order['uuid'])
+            (order_payed, status) = await payserver.check_order(order)
             
             if order_payed: 
                 match action:
@@ -128,6 +134,8 @@ async def button_handler(update: Update, context: CallbackContext) -> None:
     😇 PAYED SUCCESSFULLY ✅ 
                 """)
                         await query.edit_message_text(formatted_status, parse_mode=ParseMode.MARKDOWN)
+                        db.add_balance(update.effective_user.id,  params[2])
+
                     case "create_order_card_rf":
                         formatted_status = t(f"""
     *Order ID:* {status['metadata']['orderId']}
@@ -135,8 +143,7 @@ async def button_handler(update: Update, context: CallbackContext) -> None:
     😇 PAYED SUCCESSFULLY ✅ 
         """)
                         await query.edit_message_text(formatted_status, parse_mode=ParseMode.MARKDOWN)
-                    
-                db.add_balance(update.effective_user.id,  params[2])
+                        db.add_balance(update.effective_user.id,  params[2])
             else:
                 match action:
                     case "create_order":           
@@ -163,8 +170,8 @@ async def button_handler(update: Update, context: CallbackContext) -> None:
         
             
             
-# Function to handle the /start command
+# Function to handle the /buy command
 async def menu_start(update: Update, context: CallbackContext) -> None:
     context.user_data["menu_config"] = tt(config.buy_menu_config, update.message.from_user.language_code)
-    reply_markup = await build_menu(context.user_data["menu_config"])
+    reply_markup = await build_menu(context.user_data["menu_config"], update, context, path= [])
     await update.message.reply_text(t("Choose:"), reply_markup=reply_markup)
