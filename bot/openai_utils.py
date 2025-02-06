@@ -48,6 +48,10 @@ def calculate_total_content_length(messages):
     for message in messages:
         if 'content' in message:
                 total_length += len_in_tokens (message['content'])
+        if 'assistant' in message:
+                total_length += len_in_tokens (message['assistant'])
+        if 'user' in message:
+                total_length += len_in_tokens (message['user'][0]['text'])                
     return total_length
 
 class ChatGPT:
