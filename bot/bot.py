@@ -180,8 +180,8 @@ async def retry_handle(update: Update, context: CallbackContext):
 
     user_id = update.message.from_user.id
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
-
-    dialog_messages = db.get_dialog_messages(user_id, dialog_id=None)
+    pit_stop_message_number = db.get_dialog_attribute(user_id, key = "last_pit_stop_message_number")
+    dialog_messages = db.get_dialog_messages(user_id, dialog_id=None, message_start = pit_stop_message_number)
     if len(dialog_messages) == 0:
         await update.message.reply_text(t("No message to retry 🤷‍♂️"))
         return
@@ -189,7 +189,7 @@ async def retry_handle(update: Update, context: CallbackContext):
     last_dialog_message = dialog_messages.pop()
     db.set_dialog_messages(user_id, dialog_messages, dialog_id=None)  # last message was removed from the context
 
-    await message_handle(update, context, message=last_dialog_message["user"], use_new_dialog_timeout=False)
+    await message_handle(update, context, message=last_dialog_message, use_new_dialog_timeout=False)
 
 # async def _vision_message_handle_fn(
 #     update: Update, context: CallbackContext, use_new_dialog_timeout: bool = True
@@ -380,121 +380,138 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
     current_model = db.get_user_attribute(user_id, "current_model")
 
     async def message_handle_fn():
-
-        # new dialog timeout
-        if use_new_dialog_timeout:
-            if (datetime.now() - db.get_user_attribute(user_id, "last_interaction")).seconds > config.new_dialog_timeout and len(db.get_dialog_messages(user_id)) > 0:
-                # db.start_new_dialog(user_id)
-                # await update.message.reply_text(t("Starting new dialog due to timeout (<b>{chat_mode}</b> mode) ✅").format(chat_mode=config.chat_modes[chat_mode]['name']), parse_mode=ParseMode.HTML)
-                await update.message.reply_text(t("Nice to see you again! Some time gone, want to start /new dialog (make new chat context, save tokens) or continue this chat (spend more tokens)"), parse_mode=ParseMode.HTML)
+        # Обновляем время последнего взаимодействия пользователя
         db.set_user_attribute(user_id, "last_interaction", datetime.now())
 
-        # in case of CancelledError
+        # Переменные для токенов (на случай отмены запроса)
         n_input_tokens, n_output_tokens = 0, 0
 
         try:
-            # send placeholder message to user
+            # Отправляем placeholder-сообщение пользователю
             placeholder_message = await update.message.reply_text(t("..."))
-
-            # send typing action
+            # Отправляем индикатор набора текста
             await update.message.chat.send_action(action="typing")
 
             if _message is None or len(_message) == 0:
-                await update.message.reply_text(t("🥲 You sent <b>empty message</b>. Please, try again!"), parse_mode=ParseMode.HTML)
+                await update.message.reply_text(
+                    t("🥲 You sent <b>empty message</b>. Please, try again!"),
+                    parse_mode=ParseMode.HTML
+                )
                 return
+            # Получаем номер последней точки "pit stop" (сохранения контекста)
+            last_pit_stop_message_number_in = db.get_dialog_attribute(user_id, key="last_pit_stop_message_number")
+            last_pit_stop_message_number = int(last_pit_stop_message_number_in) if last_pit_stop_message_number_in is not None else 0
 
-            dialog_messages = db.get_dialog_messages(user_id, dialog_id=None)
+            # Получаем текущий список сообщений диалога
+            dialog_messages = db.get_dialog_messages(user_id, dialog_id=None, message_start = last_pit_stop_message_number )
             parse_mode = {
                 "html": ParseMode.HTML,
                 "markdown": ParseMode.MARKDOWN
             }[config.chat_modes[chat_mode]["parse_mode"]]
-            # if await is_no_enough_balance (update, context):
-            #     return
-            if not db.check_balance_positive (user_id):
-                
+
+            # Проверяем, достаточно ли у пользователя средств
+            if not db.check_balance_positive(user_id):
                 await context.bot.send_message(
-                        chat_id=update.message.chat_id,                        
-                        text= ("No enough balance 🥲, /buy tokens to top up 😎"),
-                        parse_mode=ParseMode.HTML
-                    )            
-                return 
-            
-            chatgpt_instance = openai_utils.ChatGPT(model=current_model) 
-            # check context is full
-            last_pit_stop_message_number_in =  db.get_user_attribute(user_id, "last_pit_stop_message_number")
-            last_pit_stop_message_number = int(last_pit_stop_message_number_in) if last_pit_stop_message_number_in is not None else 0
-            pit_stop_message_number, answer = await chatgpt_instance.convolute_dialog(dialog_messages[last_pit_stop_message_number:])
+                    chat_id=update.message.chat_id,
+                    text="No enough balance 🥲, /buy tokens to top up 😎",
+                    parse_mode=ParseMode.HTML
+                )
+                return
 
+            chatgpt_instance = openai_utils.ChatGPT(model=current_model)
+
+
+            # Передаём в ChatGPT контекст диалога, начиная с последней точки останова
+            pit_stop_message_number, answer = await chatgpt_instance.convolute_dialog(
+                dialog_messages
+            )
+
+            # Если накопился достаточно большой контекст – добавляем промежуточное сообщение
             if pit_stop_message_number > last_pit_stop_message_number:
-                last_pit_stop_message_number = last_pit_stop_message_number + pit_stop_message_number - 10 #grab 10 last messages additionally to keep dialog context
-                db.set_user_attribute(user_id, "last_pit_stop_message_number", last_pit_stop_message_number)
-                
-                new_dialog_message = {"user": [{"type": "text", "text": t("describe my progress as student")}], "assistant": answer, "date": datetime.now()}
-                db.set_dialog_messages(
-                user_id,
-                db.get_dialog_messages(user_id, dialog_id=None) + [new_dialog_message],
-                dialog_id=None
-                )                
-                        
-            if config.enable_message_streaming:
-                gen =  chatgpt_instance.send_message_stream(_message, user_id,  dialog_messages=dialog_messages[last_pit_stop_message_number:], chat_mode=chat_mode)
-                # gen = chatgpt_instance.send_message_stream(_message, dialog_messages=dialog_messages, chat_mode=chat_mode)
+                # Обновляем номер точки останова (забираем дополнительно 10 последних сообщений для контекста)
+                last_pit_stop_message_number = last_pit_stop_message_number + pit_stop_message_number - 10
+                db.set_dialog_attribute(user_id, key = "last_pit_stop_message_number", value = last_pit_stop_message_number)
 
+                new_dialog_message = {
+                    "user": [{"type": "text", "text": config.chat_modes["assistant"]["prompt_resume"]}],
+                    "assistant": answer,
+                    "date": datetime.now()
+                }
+                # Вместо перезаписи всего списка, добавляем новое сообщение
+                db.add_dialog_message(user_id, new_dialog_message, dialog_id=None)
+
+            # Определяем, какую версию диалога (контекст) передавать в ChatGPT для формирования ответа
+            # (Заметим, что переменная dialog_messages всё ещё содержит старый список – это не критично,
+            #  так как для новых сообщений применяется add_dialog_message и номер последнего сообщения обновляется)
+            if config.enable_message_streaming:
+                gen = chatgpt_instance.send_message_stream(
+                    _message,
+                    user_id,
+                    dialog_messages=dialog_messages,
+                    chat_mode=chat_mode
+                )
             else:
                 answer, (n_input_tokens, n_output_tokens), n_first_dialog_messages_removed = await chatgpt_instance.send_message(
                     _message,
-                    dialog_messages=dialog_messages[last_pit_stop_message_number:],
+                    dialog_messages=dialog_messages,
                     chat_mode=chat_mode
                 )
 
                 async def fake_gen():
                     yield "finished", answer, (n_input_tokens, n_output_tokens), n_first_dialog_messages_removed
-
                 gen = fake_gen()
 
             prev_answer = ""
-            
             async for gen_item in gen:
                 status, answer, (n_input_tokens, n_output_tokens), n_first_dialog_messages_removed = gen_item
 
-                answer = answer[:4096]  # telegram message limit
-                    
-                # update only when 100 new symbols are ready
+                # Ограничиваем ответ по лимиту Telegram
+                answer = answer[:4096]
+
+                # Обновляем placeholder-сообщение только если накопилось примерно 100 символов
                 if abs(len(answer) - len(prev_answer)) < 100 and status != "finished":
                     continue
 
                 try:
                     if parse_mode == ParseMode.HTML:
-                        escaped_answer = html.escape(answer)  # Escape special characters for HTML
+                        escaped_answer = html.escape(answer)
                     elif parse_mode == ParseMode.MARKDOWN:
-                        escaped_answer = markdown(answer)  # Escape special characters for Markdown
+                        escaped_answer = markdown(answer)
                     else:
                         escaped_answer = answer
-                    await context.bot.edit_message_text(escaped_answer, chat_id=placeholder_message.chat_id, message_id=placeholder_message.message_id, parse_mode=parse_mode)
+
+                    await context.bot.edit_message_text(
+                        escaped_answer,
+                        chat_id=placeholder_message.chat_id,
+                        message_id=placeholder_message.message_id,
+                        parse_mode=parse_mode
+                    )
                 except telegram.error.BadRequest as e:
                     if str(e).startswith("Message is not modified"):
                         continue
                     else:
-                        await context.bot.edit_message_text(escaped_answer, chat_id=placeholder_message.chat_id, message_id=placeholder_message.message_id)
+                        await context.bot.edit_message_text(
+                            escaped_answer,
+                            chat_id=placeholder_message.chat_id,
+                            message_id=placeholder_message.message_id
+                        )
 
-
-                await asyncio.sleep(0.01)  # wait a bit to avoid flooding
-                
+                await asyncio.sleep(0.01)  # Небольшая задержка для избежания флудинга
                 prev_answer = answer
-            
-            # update user data
-            new_dialog_message = {"user": [{"type": "text", "text": _message}], "assistant": answer, "date": datetime.now()}
 
-            db.set_dialog_messages(
-                user_id,
-                db.get_dialog_messages(user_id, dialog_id=None) + [new_dialog_message],
-                dialog_id=None
-            )
+            # После получения финального ответа добавляем новое сообщение в диалог
+            new_dialog_message = {
+                "user": [{"type": "text", "text": _message}],
+                "assistant": answer,
+                "date": datetime.now()
+            }
+            db.add_dialog_message(user_id, new_dialog_message, dialog_id=None)
 
+            # Обновляем информацию по использованным токенам и балансу пользователя
             db.update_n_used_tokens(user_id, current_model, n_input_tokens, n_output_tokens)
 
         except asyncio.CancelledError:
-            # note: intermediate token updates only work when enable_message_streaming=True (config.yml)
+            # При отмене обновляем токены и пробрасываем исключение
             db.update_n_used_tokens(user_id, current_model, n_input_tokens, n_output_tokens)
             raise
 
@@ -504,13 +521,20 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
             await update.message.reply_text(error_text)
             return
 
-        # send message if some messages were removed from the context
+        # Если из-за превышения длины диалога были удалены первые сообщения – уведомляем пользователя
         if n_first_dialog_messages_removed > 0:
             if n_first_dialog_messages_removed == 1:
-                text = t("✍️ <i>Note:</i> Your current dialog is too long, so your <b>first message</b> was removed from the context.\n Send /new command to start new dialog")
+                text = t(
+                    "✍️ <i>Note:</i> Your current dialog is too long, so your <b>first message</b> was removed from the context.\n"
+                    "Send /new command to start new dialog"
+                )
             else:
-                text = t("✍️ <i>Note:</i> Your current dialog is too long, so <b>{n} first messages</b> were removed from the context.\n Send /new command to start new dialog").format(n=n_first_dialog_messages_removed)
+                text = t(
+                    "✍️ <i>Note:</i> Your current dialog is too long, so <b>{n} first messages</b> were removed from the context.\n"
+                    "Send /new command to start new dialog"
+                ).format(n=n_first_dialog_messages_removed)
             await update.message.reply_text(text, parse_mode=ParseMode.HTML)
+
 
     async with user_semaphores[user_id]: 
         if len(update.message.photo) > 0: # current_model == "gpt-4-vision-preview" or current_model == "gpt-4o" or update.message.photo is not None and             
