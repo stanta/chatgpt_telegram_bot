@@ -25,8 +25,8 @@ OPENAI_COMPLETION_OPTIONS = {
     "temperature": 0.7,
     "max_tokens": 2048,
     "top_p": 1,
-    "frequency_penalty": 0,
-    "presence_penalty": 0,
+    "frequency_penalty": 0.5,
+    "presence_penalty": 0.5,
     # "include_usage": True
     # "request_timeout": 60.0,
 }
@@ -51,13 +51,35 @@ def calculate_total_content_length(messages):
         if 'assistant' in message:
                 total_length += len_in_tokens (message['assistant'])
         if 'user' in message:
-                total_length += len_in_tokens (message['user'][0]['text'])                
+                total_length += len_in_tokens (message['user'][0]['text'])
     return total_length
 
 class ChatGPT:
     def __init__(self, model="gpt-3.5-turbo"):
         assert model in config.models['available_text_models'], f"Unknown model: {model}"
         self.model = model
+        
+    async def convolute_dialog (self, dialog_messages):
+        pit_stop_message_number = 0
+        answer = None
+        retries = 5
+                
+        n_input_tokens = calculate_total_content_length(dialog_messages)
+        if n_input_tokens  > config.models['info'][self.model]['context_window_size'] * 0.9:
+            pit_stop_message_number = len(dialog_messages)
+            answer = None
+            while answer is None and retries > 0 :
+                retries -= 1
+                try:
+                    messages = self._generate_prompt_messages(config.chat_modes["assistant"]["prompt_resume"], dialog_messages, "assistant" )
+                    r = client.chat.completions.create(model=self.model,
+                    messages=messages,
+                    **OPENAI_COMPLETION_OPTIONS)
+                    answer = r.choices[0].message.content        
+                except openai.InvalidRequestError as e:  # too many tokens
+                    logger.warning(f"No answer when convol_dialog because of {e} ")
+                    
+        return  pit_stop_message_number, answer
 
     async def send_message(self, message, dialog_messages=[], chat_mode="assistant"):
         if chat_mode not in config.chat_modes.keys():
@@ -90,6 +112,7 @@ class ChatGPT:
                 #n_input_tokens, n_output_tokens = r.usage.prompt_tokens, r.usage.completion_tokens
                 n_input_tokens = calculate_total_content_length(messages)
                 n_output_tokens = len_in_tokens(answer)
+                    
             except openai.InvalidRequestError as e:  # too many tokens
                 if len(dialog_messages) == 0:
                     raise ValueError("Dialog messages is reduced to zero, but still has too many tokens to make completion") from e
@@ -277,8 +300,9 @@ class ChatGPT:
     def _encode_image(self, image_buffer: BytesIO) -> bytes:
         return base64.b64encode(image_buffer.read()).decode("utf-8")
 
-    def _generate_prompt_messages(self, message, dialog_messages, chat_mode, image_buffer: BytesIO = None):
-        prompt = config.chat_modes[chat_mode]["prompt_start"]
+    def _generate_prompt_messages(self, message, dialog_messages, chat_mode, image_buffer: BytesIO = None, prompt = None):
+        if prompt is None:
+            prompt = config.chat_modes[chat_mode]["prompt_start"]
 
         messages = [{"role": "assistant", "content": prompt}]
 

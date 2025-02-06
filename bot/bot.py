@@ -410,7 +410,7 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
             }[config.chat_modes[chat_mode]["parse_mode"]]
             # if await is_no_enough_balance (update, context):
             #     return
-            if not db.check_balance_positive (update.message.from_user.id):
+            if not db.check_balance_positive (user_id):
                 
                 await context.bot.send_message(
                         chat_id=update.message.chat_id,                        
@@ -420,14 +420,30 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
                 return 
             
             chatgpt_instance = openai_utils.ChatGPT(model=current_model) 
+            # check context is full
+            last_pit_stop_message_number_in =  db.get_user_attribute(user_id, "last_pit_stop_message_number")
+            last_pit_stop_message_number = int(last_pit_stop_message_number_in) if last_pit_stop_message_number_in is not None else 0
+            pit_stop_message_number, answer = await chatgpt_instance.convolute_dialog(dialog_messages[last_pit_stop_message_number:])
+
+            if pit_stop_message_number > last_pit_stop_message_number:
+                last_pit_stop_message_number = last_pit_stop_message_number + pit_stop_message_number - 10 #grab 10 last messages additionally to keep dialog context
+                db.set_user_attribute(user_id, "last_pit_stop_message_number", last_pit_stop_message_number)
+                
+                new_dialog_message = {"user": [{"type": "text", "text": t("describe my progress as student")}], "assistant": answer, "date": datetime.now()}
+                db.set_dialog_messages(
+                user_id,
+                db.get_dialog_messages(user_id, dialog_id=None) + [new_dialog_message],
+                dialog_id=None
+                )                
+                        
             if config.enable_message_streaming:
-                # gen =  chatgpt_instance.send_message_stream(_message, user_id,  dialog_messages=dialog_messages, chat_mode=chat_mode)
-                gen = chatgpt_instance.send_message_stream(_message, dialog_messages=dialog_messages, chat_mode=chat_mode)
+                gen =  chatgpt_instance.send_message_stream(_message, user_id,  dialog_messages=dialog_messages[last_pit_stop_message_number:], chat_mode=chat_mode)
+                # gen = chatgpt_instance.send_message_stream(_message, dialog_messages=dialog_messages, chat_mode=chat_mode)
 
             else:
                 answer, (n_input_tokens, n_output_tokens), n_first_dialog_messages_removed = await chatgpt_instance.send_message(
                     _message,
-                    dialog_messages=dialog_messages,
+                    dialog_messages=dialog_messages[last_pit_stop_message_number:],
                     chat_mode=chat_mode
                 )
 

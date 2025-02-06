@@ -10,6 +10,7 @@ info:
     price_per_1000_input_tokens: 0.00065
     price_per_1000_output_tokens: 0.00065
     tokens_per_symbol: 0.75
+    context_window_size: 2048 #  131072 = 128k tokens
     scores:
       Smart: 5
       Fast: 4
