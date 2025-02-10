@@ -6,46 +6,46 @@ ru:
           submenu:
               - text: "Выберите количество "
                 buttons:
-                - text: "100звезд-1 000 000 ExamsCoach токенов"
+                - text: "10 звезд-100 000 токенов ИИ репетитора"
                   action: "create_order_stars"
                   params:
                     - "XTR"
                     - "0.0001"                      
-                    - "10000"
-                - text: "450звезд-5 000 000 ExamsCoach токенов"
+                    - "100000"
+                - text: "45 звезд-500 000 токенов ИИ репетитора"
                   action: "create_order_stars"
                   params:
                     - "XTR"
                     - "0.00009"
-                    - "5000000"
-                - text: "800звезд-10 000 000 ExamsCoach токенов - "
+                    - "500000"
+                - text: "80 звезд-1 000 000 токенов ИИ репетитора - "
                   action: "create_order_stars"
                   params:
                     - "XTR"
                     - "0.00008" 
-                    - "10000000"       
+                    - "1000000"       
         - text: "Покупка с карты РФ"
           submenu:
               - text: "Выберите количество "
                 buttons:
-                - text: "150руб-1млн ExamsCoach токенов"
+                - text: "16 руб-100 000 токенов ИИ репетитора"
                   action: "create_order_card_rf"
                   params:
                     - "RUB"
-                    - "0.00015"                      
-                    - "1000000"
-                - text: "700руб-5млн ExamsCoach токенов"
+                    - "0.00016"                      
+                    - "100000"
+                - text: "70 руб-500 000 токенов ИИ репетитора"
                   action: "create_order_card_rf"
                   params:
                     - "RUB"
-                    - "0.0007"
-                    - "5000000"
-                - text: "1200руб-10млн ExamsCoach токенов - "
+                    - "0.00014"
+                    - "500000"
+                - text: "120руб-1 000 000 токенов ИИ репетитора - "
                   action: "create_order_card_rf"
                   params:
                     - "RUB"
-                    - "0.0012" 
-                    - "10000000" 
+                    - "0.00012" 
+                    - "1000000" 
         - text: "Покупка за крипту"
           submenu:
           - text: "Выберите валюту"
@@ -54,94 +54,94 @@ ru:
               submenu:
               - text: "Выберите количество "
                 buttons:
-                - text: "0.3 ТОН-1 млн ExamsCoach токенов"
-                  action: "create_order"
-                  params:
-                    - "TON"
-                    - "0.0000003"
-                    - "1000000"               
-                - text: "1.5 ТОН-6 млн ExamsCoach токенов "
+                # - text: "0.3 ТОН-1 млн токенов ИИ репетитора"
+                #   action: "create_order"
+                #   params:
+                #     - "TON"
+                #     - "0.0000003"
+                #     - "1000000"               
+                - text: "0.15 ТОН-600 000 токенов ИИ репетитора "
                   action: "create_order"
                   params:
                     - "TON"
                     - "0.00000025"
-                    - "6000000"
-                - text: "2 ТОН-10 млн ExamsCoach токенов"
+                    - "600000"
+                - text: "0.2 ТОН-1 000 000 токенов ИИ репетитора"
                   action: "create_order"
                   params:
                     - "TON"
                     - "0.0000002"    
-                    - "10000000"                                                
+                    - "1000000"                                                
             - text: "за USDT"
               submenu:
               - text: "Выберите количество "
                 buttons:
-                - text: "1.5 USDT - 1 млн ExamsCoach токенов"
-                  action: "create_order"
-                  params:
-                    - "USDT"
-                    - "0.0000015"                      
-                    - "1000000"
-                - text: "7 USDT - 5 млн ExamsCoach токенов "
+                # - text: "1.5 USDT - 1 млн токенов ИИ репетитора"
+                #   action: "create_order"
+                #   params:
+                #     - "USDT"
+                #     - "0.0000015"                      
+                #     - "1000000"
+                - text: "0,7 USDT - 500 000 токенов ИИ репетитора "
                   action: "create_order"
                   params:
                     - "USDT"
                     - "0.0000014"
-                    - "5000000"
-                - text: "12 USDT за 10 млн ExamsCoach токенов "
+                    - "500000"
+                - text: "1.2 USDT за 1 000 000 токенов ИИ репетитора "
                   action: "create_order"
                   params:
                     - "USDT"
                     - "0.0000012" 
-                    - "10000000"                                                   
+                    - "1000000"                                                   
 en:
   # menu:
-    - text: "Coach Token Purchase: Choose Payment Method"
+    - text: "AI tutor Token Purchase: Choose Payment Method"
       buttons:
         - text: "Buy with Telegram stars"
           submenu:
             - text: "Select the quantity"
               buttons:
-                - text: "100stars - 1 million ExamsCoach tokens"
+                - text: "10 stars - 100 000 AI tutor tokens"
                   action: "create_order_stars"
                   params:
                     - "XTR"
                     - "0.0001"                      
-                    - "1000000"
-                - text: "450stars - 5 million ExamsCoach tokens"
+                    - "100000"
+                - text: "45 stars - 500 000 AI tutor tokens"
                   action: "create_order_stars"
                   params:
                     - "XTR"
                     - "0.00009"
-                    - "5000000"
-                - text: "800stars - 10 million ExamsCoach tokens"
+                    - "500000"
+                - text: "80 stars - 1 000 000  AI tutor tokens"
                   action: "create_order_stars"
                   params:
                     - "XTR"
                     - "0.00008" 
-                    - "10000000"      
+                    - "1000000"      
         - text: "Buy with Russian Card "
           submenu:
                   - text: "Select Amount"
                     buttons:
-                      - text: "159Rub-1mln.ExamsCoach tokens"
+                      - text: "16 Rub-100 000 AI tutor tokens"
                         action: "create_order_card_rf"
                         params:
                           - "RUB"
-                          - "0.00015"                      
+                          - "0.00016"                      
+                          - "100000"
+                      - text: "70 RUB - 500 000 AI tutor tokens"
+                        action: "create_order_card_rf"
+                        params:
+                          - "RUB"
+                          - "0.00014"
+                          - "500000"
+                      - text: "120 RUB- 1 000 000 AI tutor tokens"
+                        action: "create_order_card_rf"
+                        params:
+                          - "RUB"
+                          - "0.00012"
                           - "1000000"
-                      - text: "700RUB-5mln.ExamsCoach tokens"
-                        action: "create_order_card_rf"
-                        params:
-                          - "RUB"
-                          - "0.0007"
-                          - "5000000"
-                      - text: "1200RUB-10mln.ExamsCoach tokens"
-                        action: "create_order_card_rf"
-                        params:
-                          - "RUB"
-                          - "0.0012"
-                          - "10000000"
         - text: "Buy with Crypto"
           submenu:
             - text: "Select Currency"
@@ -150,43 +150,43 @@ en:
                 submenu:
                   - text: "Select Amount"
                     buttons:
-                      - text: "0.3TON-1mln. ExamsCoach tokens"
-                        action: "create_order"
-                        params:
-                          - "TON"
-                          - "0.0000003"
-                          - "1000000"
-                      - text: "1.5TON-6mln. ExamsCoach tokens"
+                      # - text: "0.3TON-1mln. AI tutor tokens"
+                      #   action: "create_order"
+                      #   params:
+                      #     - "TON"
+                      #     - "0.0000003"
+                      #     - "1000000"
+                      - text: "0.15 TON- 600 000 AI tutor tokens"
                         action: "create_order"
                         params:
                           - "TON"
                           - "0.00000025"
-                          - "6000000"
-                      - text: "2TON-10mln. ExamsCoach tokens"
+                          - "600000"
+                      - text: "0.2 TON- 1 000 000 AI tutor tokens"
                         action: "create_order"
                         params:
                           - "TON"
                           - "0.0000002"
-                          - "10000000"
+                          - "1000000"
               - text: "for USDT"
                 submenu:
                   - text: "Select Amount"
                     buttons:
-                      - text: "1.5USDT-1mln. ExamsCoach tokens"
-                        action: "create_order"
-                        params:
-                          - "USDT"
-                          - "0.0000015"
-                          - "1000000"
-                      - text: "7USDT-5mln. ExamsCoach tokens"
+                      # - text: "1.5USDT-1mln. AI tutor tokens"
+                      #   action: "create_order"
+                      #   params:
+                      #     - "USDT"
+                      #     - "0.0000015"
+                      #     - "1000000"
+                      - text: "0.7 USDT- 500 000 AI tutor tokens"
                         action: "create_order"
                         params:
                           - "USDT"
                           - "0.0000014"
-                          - "5000000"
-                      - text: "12USDT-10mln. ExamsCoach tokens"
+                          - "500000"
+                      - text: "1.2 USDT-1 000 000 AI tutor tokens"
                         action: "create_order"
                         params:
                           - "USDT"
                           - "0.0000012"
-                          - "10000000"
+                          - "1000000"
