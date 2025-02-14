@@ -111,6 +111,7 @@ class Database:
         user_dict = self.user_collection.find_one({"_id": user_id})
 
         if key not in user_dict:
+            self.set_user_attribute(user_id, key, "")
             return None
 
         return user_dict[key]
@@ -127,7 +128,8 @@ class Database:
 
     def update_n_used_tokens(self, user_id: int, model: str, n_input_tokens: int, n_output_tokens: int):
         n_used_tokens_dict = self.get_user_attribute(user_id, "n_used_tokens")
-        balance = float(self.get_user_attribute(user_id, "balance"))
+        bal_attr = self.get_user_attribute(user_id, "balance")
+        balance =  float(bal_attr) if bal_attr !="" else 0
         if model in n_used_tokens_dict:
             n_used_tokens_dict[model]["n_input_tokens"] += n_input_tokens
             n_used_tokens_dict[model]["n_output_tokens"] += n_output_tokens
@@ -143,8 +145,9 @@ class Database:
         self.set_user_attribute(user_id, "balance", balance)
 
     def check_balance_positive(self, user_id: int):
-        res = self.get_user_attribute(user_id, "balance")
-        return int(res) >= 0
+        bal_attr = self.get_user_attribute(user_id, "balance")
+        balance =  float(bal_attr) if bal_attr !="" else 0
+        return  int(balance) >= 0
 
     def add_balance(self, user_id: int, amount: float):
         balance = self.get_user_attribute(user_id, "balance")
@@ -183,11 +186,17 @@ class Database:
                 #     msg_date = datetime.strptime(msg_dict.get("date", ""), "%Y-%m-%d %H:%M:%S")
                 # except Exception:
                 #     msg_date = datetime.now()
+                
+                assistant_str = ""
+                if  "assistant" in msg_dict :
+                    assistant_str = msg_dict["assistant"] 
+                if "bot" in msg_dict  :
+                    assistant_str = assistant_str + " " + msg_dict["bot"]             
                 new_msg_doc = {
                     "dialog_id": dialog_id,
                     "message_number": count,
-                    "user": msg_dict.get["user"],
-                    "assistant": msg_dict.get["assistant"],
+                    "user": msg_dict["user"],
+                    "assistant": assistant_str,
                     "date": msg_dict["date"]
                 }
                 self.dialog_message_collection.insert_one(new_msg_doc)

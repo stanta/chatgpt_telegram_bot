@@ -8,7 +8,7 @@ import openai
 from openai import AsyncOpenAI, OpenAI
 
 # client = AsyncOpenAI(api_key=config.openai_api_key)
-client = OpenAI(api_key=config.openai_api_key)
+client = OpenAI(api_key=config.openai_api_key, base_url=config.openai_api_base)
 
 
 # setup openai

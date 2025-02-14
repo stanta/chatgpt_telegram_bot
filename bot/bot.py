@@ -878,7 +878,7 @@ async def set_settings_handle(update: Update, context: CallbackContext):
     db.set_user_attribute(user_id, "current_model", model_key)
     db.start_new_dialog(user_id)
 
-    text, reply_markup = get_settings_menu(user_id)
+    text, reply_markup = get_settings_menu(user_id, update)
     try:
         await query.edit_message_text(text, reply_markup=reply_markup, parse_mode=ParseMode.HTML)
     except telegram.error.BadRequest as e:
