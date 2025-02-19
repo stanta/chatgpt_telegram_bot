@@ -18,4 +18,19 @@
 - сдаваемые экзамены, пройденные темы по каждому, успешность ответов ученика по каждой теме
 - хобби ученика
 - психотип ученика по Юнгу
-11. зарефакторить хранение сообщений в архитектуре Монго
+
+11.+ резюмирование диалогов (бесконечный диалог) Арчибот+ Эксани+  ЕГЭ+, Энем+, YOUcoach (https://gitlab.architecton.site/bots/chatgpt_telegram_bot/-/commit/808330908f695d839b8e904d223acb243d5b10e0)
+12.+ зарефакторить хранение сообщений в архитектуре Монго   Арчибот+ Эксани+  ЕГЭ+, Энем+, YOUcoach  (https://gitlab.architecton.site/bots/chatgpt_telegram_bot/-/commit/2eb27cf07918aab241fa9c6d10ee2cf1d1a10596) 
+13: ошибки в ДБ  Арчибот+ Эксани+  ЕГЭ+, Энем+, YOUcoach https://gitlab.architecton.site/bots/chatgpt_telegram_bot/-/commit/32b0d4b33cb19b5d4938d08347fd3514077c5d58
+14  ограничить (10) 500 словами  Арчибот+ Эксани+  ЕГЭ+, Энем+, 
+15. дисклеймер в промптах    Эксани+  ЕГЭ+, Энем+, 
+
+Я не смогу сдать за тебя экзамен, но могу объяснить, как решать задания. Если ты согласен, то давай начнем!
+I'm an experimental AI bot and can make mistakes. I can't take the exam for you, but I can explain how to solve the tasks. If you agree, let's get started!
+Pero recuerda que soy un robot de IA experimental y puedo cometer errores. No puedo hacer el examen por ti, pero puedo explicarte cómo resolver los problemas. Si estás de acuerdo ¡entonces comencemos!
+
+Asegúrate de advertir que eres un bot de IA experimental y puedes cometer errores. No puedes tomar el examen por el estudiante, sólo puedes explicar cómo resolver los problemas. Pregúntale si está de acuerdo y luego ofrécete a empezar a trabajar
+
+Если ученик боится сдавать экзамен, предложи ему (ей) психологическую поддержку, расскажи, как бороться со стрессом, настроиться на сдачу экзамена, приободри другими способами, сравни с поведением героев в указанных им играх, фильмах.
+
+16. мультибот
