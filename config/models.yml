@@ -5,8 +5,8 @@ info:
     type: chat_completion
     name: llama3.3
     description:  
-      en: Llama.3. 70B trained  128K context window  It's <b>conversational</b> and <b>knowledgeable</b>. Ideal for discussions and explanations. If there are some topics it can't cover, try asking me about <b>education and learning materials</b>..
-      ru: Llama.3.3 70 млрд токенов  128К окно контекста. Это <b> разговорная </b> языковая модель. Идеально подходит для дискуссий и объяснений. Если есть какие-то темы, которые он не может охватить, попробуйте спросить меня об образовании и учебных материалах..
+      en: Llama.3. 70B trained   It's <b>conversational</b> and <b>knowledgeable</b>. Ideal for discussions and explanations. If there are some topics it can't cover, try asking me about <b>education and learning materials</b>..
+      ru: Llama.3.3 70 млрд токенов   Это <b> разговорная </b> языковая модель. Идеально подходит для дискуссий и объяснений. Если есть какие-то темы, которые он не может охватить, попробуйте спросить меня об образовании и учебных материалах..
     price_per_1000_input_tokens: 0.00065
     price_per_1000_output_tokens: 0.00065
     tokens_per_symbol: 0.75
