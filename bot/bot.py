@@ -984,7 +984,7 @@ async def post_init(application: Application):
         # BotCommand("/new", t("Start new dialog")),
         BotCommand("/buy", t("Buy bot tokens")),
         # BotCommand("/mode", t("Select chat mode")),
-        BotCommand("/retry", t("Re-generate response for previous query")),
+        # BotCommand("/retry", t("Re-generate response for previous query")),
         BotCommand("/balance", t("Show balance")),
         BotCommand("/settings", t("Show settings")),
         BotCommand("/help", t("Show help message")),

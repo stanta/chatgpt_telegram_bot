@@ -1,24 +1,24 @@
 ru:
   # menu:
-    - text: "Покупка токенов Коуча: Выберите способ оплаты"
+    - text: "Покупка слов ИИ репетитора: Выберите способ оплаты"
       buttons:
         - text: "Покупка за Телеграм звезды"
           submenu:
               - text: "Выберите количество "
                 buttons:
-                - text: "10 звезд-100 000 токенов ИИ репетитора"
+                - text: "10 звезд-100 000 слов ИИ репетитора"
                   action: "create_order_stars"
                   params:
                     - "XTR"
                     - "0.0001"                      
                     - "100000"
-                - text: "45 звезд-500 000 токенов ИИ репетитора"
+                - text: "45 звезд-500 000 слов ИИ репетитора"
                   action: "create_order_stars"
                   params:
                     - "XTR"
                     - "0.00009"
                     - "500000"
-                - text: "80 звезд-1 000 000 токенов ИИ репетитора - "
+                - text: "80 звезд-1 000 000 слов ИИ репетитора - "
                   action: "create_order_stars"
                   params:
                     - "XTR"
@@ -28,19 +28,19 @@ ru:
           submenu:
               - text: "Выберите количество "
                 buttons:
-                - text: "16 руб-100 000 токенов ИИ репетитора"
+                - text: "16 руб-100 000 слов ИИ репетитора"
                   action: "create_order_card_rf"
                   params:
                     - "RUB"
                     - "0.00016"                      
                     - "100000"
-                - text: "70 руб-500 000 токенов ИИ репетитора"
+                - text: "70 руб-500 000 слов ИИ репетитора"
                   action: "create_order_card_rf"
                   params:
                     - "RUB"
                     - "0.00014"
                     - "500000"
-                - text: "120руб-1 000 000 токенов ИИ репетитора - "
+                - text: "120руб-1 000 000 слов ИИ репетитора - "
                   action: "create_order_card_rf"
                   params:
                     - "RUB"
@@ -54,19 +54,19 @@ ru:
               submenu:
               - text: "Выберите количество "
                 buttons:
-                # - text: "0.3 ТОН-1 млн токенов ИИ репетитора"
+                # - text: "0.3 ТОН-1 млн слов ИИ репетитора"
                 #   action: "create_order"
                 #   params:
                 #     - "TON"
                 #     - "0.0000003"
                 #     - "1000000"               
-                - text: "0.15 ТОН-600 000 токенов ИИ репетитора "
+                - text: "0.15 ТОН-600 000 слов ИИ репетитора "
                   action: "create_order"
                   params:
                     - "TON"
                     - "0.00000025"
                     - "600000"
-                - text: "0.2 ТОН-1 000 000 токенов ИИ репетитора"
+                - text: "0.2 ТОН-1 000 000 слов ИИ репетитора"
                   action: "create_order"
                   params:
                     - "TON"
@@ -76,19 +76,19 @@ ru:
               submenu:
               - text: "Выберите количество "
                 buttons:
-                # - text: "1.5 USDT - 1 млн токенов ИИ репетитора"
+                # - text: "1.5 USDT - 1 млн слов ИИ репетитора"
                 #   action: "create_order"
                 #   params:
                 #     - "USDT"
                 #     - "0.0000015"                      
                 #     - "1000000"
-                - text: "0,7 USDT - 500 000 токенов ИИ репетитора "
+                - text: "0,7 USDT - 500 000 слов ИИ репетитора "
                   action: "create_order"
                   params:
                     - "USDT"
                     - "0.0000014"
                     - "500000"
-                - text: "1.2 USDT за 1 000 000 токенов ИИ репетитора "
+                - text: "1.2 USDT за 1 000 000 слов ИИ репетитора "
                   action: "create_order"
                   params:
                     - "USDT"
@@ -96,25 +96,25 @@ ru:
                     - "1000000"                                                   
 en:
   # menu:
-    - text: "AI tutor Token Purchase: Choose Payment Method"
+    - text: "AI tutor word Purchase: Choose Payment Method"
       buttons:
         - text: "Buy with Telegram stars"
           submenu:
             - text: "Select the quantity"
               buttons:
-                - text: "10 stars - 100 000 AI tutor tokens"
+                - text: "10 stars - 100 000 AI tutor words"
                   action: "create_order_stars"
                   params:
                     - "XTR"
                     - "0.0001"                      
                     - "100000"
-                - text: "45 stars - 500 000 AI tutor tokens"
+                - text: "45 stars - 500 000 AI tutor words"
                   action: "create_order_stars"
                   params:
                     - "XTR"
                     - "0.00009"
                     - "500000"
-                - text: "80 stars - 1 000 000  AI tutor tokens"
+                - text: "80 stars - 1 000 000  AI tutor words"
                   action: "create_order_stars"
                   params:
                     - "XTR"
@@ -124,19 +124,19 @@ en:
           submenu:
                   - text: "Select Amount"
                     buttons:
-                      - text: "16 Rub-100 000 AI tutor tokens"
+                      - text: "16 Rub-100 000 AI tutor words"
                         action: "create_order_card_rf"
                         params:
                           - "RUB"
                           - "0.00016"                      
                           - "100000"
-                      - text: "70 RUB - 500 000 AI tutor tokens"
+                      - text: "70 RUB - 500 000 AI tutor words"
                         action: "create_order_card_rf"
                         params:
                           - "RUB"
                           - "0.00014"
                           - "500000"
-                      - text: "120 RUB- 1 000 000 AI tutor tokens"
+                      - text: "120 RUB- 1 000 000 AI tutor words"
                         action: "create_order_card_rf"
                         params:
                           - "RUB"
@@ -150,19 +150,19 @@ en:
                 submenu:
                   - text: "Select Amount"
                     buttons:
-                      # - text: "0.3TON-1mln. AI tutor tokens"
+                      # - text: "0.3TON-1mln. AI tutor words"
                       #   action: "create_order"
                       #   params:
                       #     - "TON"
                       #     - "0.0000003"
                       #     - "1000000"
-                      - text: "0.15 TON- 600 000 AI tutor tokens"
+                      - text: "0.15 TON- 600 000 AI tutor words"
                         action: "create_order"
                         params:
                           - "TON"
                           - "0.00000025"
                           - "600000"
-                      - text: "0.2 TON- 1 000 000 AI tutor tokens"
+                      - text: "0.2 TON- 1 000 000 AI tutor words"
                         action: "create_order"
                         params:
                           - "TON"
@@ -172,19 +172,19 @@ en:
                 submenu:
                   - text: "Select Amount"
                     buttons:
-                      # - text: "1.5USDT-1mln. AI tutor tokens"
+                      # - text: "1.5USDT-1mln. AI tutor words"
                       #   action: "create_order"
                       #   params:
                       #     - "USDT"
                       #     - "0.0000015"
                       #     - "1000000"
-                      - text: "0.7 USDT- 500 000 AI tutor tokens"
+                      - text: "0.7 USDT- 500 000 AI tutor words"
                         action: "create_order"
                         params:
                           - "USDT"
                           - "0.0000014"
                           - "500000"
-                      - text: "1.2 USDT-1 000 000 AI tutor tokens"
+                      - text: "1.2 USDT-1 000 000 AI tutor words"
                         action: "create_order"
                         params:
                           - "USDT"
