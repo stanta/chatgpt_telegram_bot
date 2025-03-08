@@ -143,6 +143,13 @@ class Database:
 
         self.set_user_attribute(user_id, "n_used_tokens", n_used_tokens_dict)
         self.set_user_attribute(user_id, "balance", balance)
+        
+        n_used_tokens_dialog = 0 if self.get_dialog_attribute(user_id, "n_used_tokens_dialog") is None else self.get_dialog_attribute(user_id, "n_used_tokens_dialog")
+        n_used_tokens_dialog = int(n_used_tokens_dialog) + n_input_tokens + n_output_tokens
+        
+        self.set_user_attribute(user_id, "n_used_tokens", n_used_tokens_dict)
+        self.set_user_attribute(user_id, "balance", balance)
+        self.set_dialog_attribute(user_id, "n_used_tokens_dialog", n_used_tokens_dialog)
 
     def check_balance_positive(self, user_id: int):
         bal_attr = self.get_user_attribute(user_id, "balance")
@@ -294,16 +301,16 @@ class Database:
                 continue
 
             message_number += 1
-            try:
-                msg_date = datetime.strptime(msg_dict.get("date", ""), "%Y-%m-%d %H:%M:%S")
-            except Exception:
-                msg_date = datetime.now()
+            # try:
+            #     msg_date = datetime.now # strptime(msg_dict.get("date", ""), "%Y-%m-%d %H:%M:%S")
+            # except Exception:
+            #     msg_date = datetime.now()
             new_msg_doc = {
                 "dialog_id": dialog_id,
                 "message_number": message_number,
-                "user": msg_dict.get["user"],
-                "assistant": msg_dict.get["assistant"],
-                "date": msg_date
+                "user": msg_dict["user"],
+                "assistant": msg_dict["assistant"],
+                "date": msg_dict["date"]
             }
             self.dialog_message_collection.insert_one(new_msg_doc)
 

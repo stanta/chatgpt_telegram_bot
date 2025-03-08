@@ -6,9 +6,10 @@ import logging
 import tiktoken
 import openai
 from openai import AsyncOpenAI, OpenAI
+from  i18n import t
 
-# client = AsyncOpenAI(api_key=config.openai_api_key)
-client = OpenAI(api_key=config.openai_api_key, base_url=config.openai_api_base)
+client = AsyncOpenAI(api_key=config.openai_api_key)
+#client = OpenAI(api_key=config.openai_api_key, base_url=config.openai_api_base)
 
 
 # setup openai
@@ -56,7 +57,7 @@ def calculate_total_content_length(messages):
 
 class ChatGPT:
     def __init__(self, model="gpt-3.5-turbo"):
-        assert model in config.models['available_text_models'], f"Unknown model: {model}"
+        # assert model in config.models['available_text_models'], f"Unknown model: {model}"
         self.model = model
         
     async def convolute_dialog (self, dialog_messages):
@@ -76,7 +77,7 @@ class ChatGPT:
                     messages=messages,
                     **OPENAI_COMPLETION_OPTIONS)
                     answer = r.choices[0].message.content        
-                except openai.InvalidRequestError as e:  # too many tokens
+                except Exception as e:  # too many tokens
                     logger.warning(f"No answer when convol_dialog because of {e} ")
                     
         return  pit_stop_message_number, answer
@@ -113,7 +114,7 @@ class ChatGPT:
                 n_input_tokens = calculate_total_content_length(messages)
                 n_output_tokens = len_in_tokens(answer)
                     
-            except openai.InvalidRequestError as e:  # too many tokens
+            except Exception as e:  # too many tokens
                 if len(dialog_messages) == 0:
                     raise ValueError("Dialog messages is reduced to zero, but still has too many tokens to make completion") from e
 
@@ -172,7 +173,7 @@ class ChatGPT:
 
                 answer = self._postprocess_answer(answer)
 
-            except openai.InvalidRequestError as e:  # too many tokens
+            except Exception as e:  # too many tokens
                 if len(dialog_messages) == 0:
                     raise e
 
@@ -192,23 +193,23 @@ class ChatGPT:
         answer = None
         while answer is None:
             try:
-                if self.model == "gpt-4-vision-preview" or self.model == "gpt-4o":
-                    messages = self._generate_prompt_messages(
-                        message, dialog_messages, chat_mode, image_buffer
-                    )
-                    r = client.chat.completions.create(model=self.model,
-                    messages=messages,
-                    **OPENAI_COMPLETION_OPTIONS)
-                    answer = r.choices[0].message.content
-                else:
-                    raise ValueError(f"Unsupported model: {self.model}")
+                # if self.model == "gpt-4-vision-preview" or self.model == "gpt-4o":
+                messages = self._generate_prompt_messages(
+                    message, dialog_messages, chat_mode, image_buffer,  prompt = t("Read and reproduce literally text on image using same language, try to understand what draw on pictures and describe in same language.")
+                )
+                r = await  client.chat.completions.create(model= "gpt-4o-mini", #self.model, 
+                messages=messages,
+                **OPENAI_COMPLETION_OPTIONS)
+                answer = r.choices[0].message.content
+                # else:
+                #     raise ValueError(f"Unsupported model: {self.model}")
 
                 answer = self._postprocess_answer(answer)
                 n_input_tokens, n_output_tokens = (
                     r.usage.prompt_tokens,
                     r.usage.completion_tokens,
                 )
-            except openai.InvalidRequestError as e:  # too many tokens
+            except Exception as e:  # too many tokens
                 if len(dialog_messages) == 0:
                     raise ValueError(
                         "Dialog messages is reduced to zero, but still has too many tokens to make completion"
@@ -238,38 +239,38 @@ class ChatGPT:
         answer = None
         while answer is None:
             try:
-                if self.model == "gpt-4-vision-preview" or self.model == "gpt-4o":
-                    messages = self._generate_prompt_messages(
-                        message, dialog_messages, chat_mode, image_buffer
-                    )
+                # if self.model == "gpt-4-vision-preview" or self.model == "gpt-4o":
+                messages = self._generate_prompt_messages(
+                    message, dialog_messages, chat_mode, image_buffer
+                )
 
-                    r_gen = client.chat.completions.create(model=self.model,
-                    messages=messages,
-                    stream=True,
-                    **OPENAI_COMPLETION_OPTIONS)
+                r_gen = client.chat.completions.create(model="gpt-4o-mini", #self.model,
+                messages=messages,
+                stream=True,
+                **OPENAI_COMPLETION_OPTIONS)
 
-                    answer = ""
-                    async for r_item in r_gen:
-                        delta = r_item.choices[0].delta
-                        if "content" in delta:
-                            answer += delta.content
-                            (
-                                n_input_tokens,
-                                n_output_tokens,
-                            ) = self._count_tokens_from_messages(
-                                messages, answer, model=self.model
-                            )
-                            n_first_dialog_messages_removed = (
-                                n_dialog_messages_before - len(dialog_messages)
-                            )
-                            yield "not_finished", answer, (
-                                n_input_tokens,
-                                n_output_tokens,
-                            ), n_first_dialog_messages_removed
+                answer = ""
+                async for r_item in r_gen:
+                    delta = r_item.choices[0].delta
+                    if "content" in delta:
+                        answer += delta.content
+                        (
+                            n_input_tokens,
+                            n_output_tokens,
+                        ) = self._count_tokens_from_messages(
+                            messages, answer, model=self.model
+                        )
+                        n_first_dialog_messages_removed = (
+                            n_dialog_messages_before - len(dialog_messages)
+                        )
+                        yield "not_finished", answer, (
+                            n_input_tokens,
+                            n_output_tokens,
+                        ), n_first_dialog_messages_removed
 
                 answer = self._postprocess_answer(answer)
 
-            except openai.InvalidRequestError as e:  # too many tokens
+            except Exception as e:  # too many tokens
                 if len(dialog_messages) == 0:
                     raise e
                 # forget first message in dialog_messages
@@ -311,27 +312,27 @@ class ChatGPT:
             messages.append({"role": "assistant", "content": dialog_message["assistant"]})
 
         if image_buffer is not None:
-            pass
-            # messages.append(
-            #     {
-            #         "role": "user", 
-            #         "content": [
-            #             {
-            #                 "type": "text",
-            #                 "text": message,
-            #             },
-            #             {
-            #                 "type": "image_url",
-            #                 "image_url" : {
+            
+            messages.append(
+                {
+                    "role": "user", 
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": message,
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url" : {
 
-            #                     "url": f"data:image/jpeg;base64,{self._encode_image(image_buffer)}",
-            #                     "detail":"high"
-            #                 }
-            #             }
-            #         ]
-            #     }
+                                "url": f"data:image/jpeg;base64,{self._encode_image(image_buffer)}",
+                                "detail":"high"
+                            }
+                        }
+                    ]
+                }
 
-            # )
+            )
         else:
             messages.append({"role": "user", "content": message})
 
@@ -409,7 +410,8 @@ async def transcribe_audio(audio_file) -> str:
 async def generate_images(prompt, n_images=4, size="512x512"):
     r = await client.images.generate(prompt=prompt, n=n_images, size=size)
     image_urls = [item.url for item in r.data]
-    return image_urls
+    return image_urls, (r.usage.prompt_tokens,
+                    r.usage.completion_tokens)
 
 
 async def is_content_acceptable(prompt):
