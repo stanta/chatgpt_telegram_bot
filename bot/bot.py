@@ -214,14 +214,14 @@ async def _vision_message_handle_fn(
     #         # db.start_new_dialog(user_id)
     #         # await update.message.reply_text(t("Starting new dialog due to timeout (<b>{chat_mode}</b> mode) ✅").format(chat_mode=config.chat_modes[chat_mode]['name']), parse_mode=ParseMode.HTML)
     #         await update.message.reply_text(t("Nice to see you again! Some time gone, want to start /new dialog (make new chat context, save tokens) or continue this chat (spend more tokens)"), parse_mode=ParseMode.HTML)
-    db.set_user_attribute(user_id, "last_interaction", datetime.now())
-    if not db.check_balance_positive(user_id):
-        await context.bot.send_message(
-            chat_id=update.message.chat_id,
-            text="No enough balance 🥲, /buy tokens to top up 😎",
-            parse_mode=ParseMode.HTML
-        )
-        return
+    # db.set_user_attribute(user_id, "last_interaction", datetime.now())
+    # if not db.check_balance_positive(user_id):
+    #     await context.bot.send_message(
+    #         chat_id=update.message.chat_id,
+    #         text="No enough balance 🥲, /buy tokens to top up 😎",
+    #         parse_mode=ParseMode.HTML
+    #     )
+    #     return
 
     buf = None
     if update.message.effective_attachment:
@@ -320,7 +320,7 @@ async def _vision_message_handle_fn(
             new_dialog_message = {"user": [
                         {
                             "type": "text",
-                            "text": message,
+                            "text": "", #message,
                         },
                         {
                             "type": "image",
@@ -338,7 +338,9 @@ async def _vision_message_handle_fn(
         )
 
         db.update_n_used_tokens(user_id, current_model, n_input_tokens, n_output_tokens)
-        await message_handle_fn(update, context, message=answer)
+        if update.message.caption is not None:
+            answer = update.message.caption + " " + answer
+        await message_handle_fn(update, context, message= answer)
 
 
     except asyncio.CancelledError:
@@ -372,8 +374,11 @@ async def message_handle_fn(update: Update, context: CallbackContext,  message: 
             # Отправляем placeholder-сообщение пользователю
             placeholder_message = await update.message.reply_text(t("answering..."))
             # Отправляем индикатор набора текста
-            await update.message.chat.send_action(action="typing")
-            _message = message or update.message.text
+            # await update.message.chat.send_action(action="typing")
+            if len (message) == 0:
+                _message = update.message.text
+            else:
+                _message = message
             if _message is None or len(_message) == 0:
                 await update.message.reply_text(
                     t("🥲 You sent <b>empty message</b>. Please, try again!"),
@@ -523,6 +528,7 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
         return
 
     _message = message or update.message.text
+#TODO      replied_message = update.message.reply_to_message if update.message.reply_to_message else update.message.forward_from_message
 
     # remove bot mention (in group chats)
     if update.message.chat.type != "private":
@@ -593,7 +599,7 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
 
 
 async def is_previous_message_not_answered_yet(update: Update, context: CallbackContext):
-    await register_user_if_not_exists(update, context, update.message.from_user)
+    # await register_user_if_not_exists(update, context, update.message.from_user)
 
     user_id = update.message.from_user.id
     if user_semaphores[user_id].locked():
@@ -610,8 +616,8 @@ async def voice_message_handle(update: Update, context: CallbackContext):
     if not await is_bot_mentioned(update, context):
         return
 
-    await register_user_if_not_exists(update, context, update.message.from_user)
-    if await is_previous_message_not_answered_yet(update, context): return
+    # await register_user_if_not_exists(update, context, update.message.from_user)
+    # if await is_previous_message_not_answered_yet(update, context): return
 
     user_id = update.message.from_user.id
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
@@ -631,26 +637,27 @@ async def voice_message_handle(update: Update, context: CallbackContext):
     buf.name = "voice.oga"  # file extension is required
     buf.seek(0)  # move cursor to the beginning of the buffer
 
-    transcribed_text = await openai_utils.transcribe_audio(buf)
-    text = t("🎤: <i>{transcribed_text}</i>").format(transcribed_text=transcribed_text)
+    answer = await openai_utils.transcribe_audio(buf)
+    # text = t("🎤: <i>{transcribed_text}</i>").format(transcribed_text=transcribed_text)
 
     # await update.message.reply_text(text, parse_mode=ParseMode.HTML)
 
     # update n_transcribed_seconds
-    current_model = "gpt4o-mini-audio"
+    current_model = "o3-mini"
     tokens_per_second = config.models["info"][current_model]["tokens_per_second"]
     db.set_user_attribute(user_id, "n_transcribed_seconds", voice.duration + db.get_user_attribute(user_id, "n_transcribed_seconds"))
     db.update_n_used_tokens(user_id, current_model, 0, int(voice.duration * tokens_per_second))
-
-    await message_handle_fn(update, context, message=transcribed_text)
+    if update.message.caption is not None:
+            answer = update.message.caption + " " + answer
+    await message_handle_fn(update, context, message= answer)
 
 async def audio_message_handle(update: Update, context: CallbackContext):
     # check if bot was mentioned (for group chats)
     if not await is_bot_mentioned(update, context):
         return
 
-    await register_user_if_not_exists(update, context, update.message.from_user)
-    if await is_previous_message_not_answered_yet(update, context): return
+    # await register_user_if_not_exists(update, context, update.message.from_user)
+    # if await is_previous_message_not_answered_yet(update, context): return
 
     user_id = update.message.from_user.id
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
@@ -670,8 +677,8 @@ async def audio_message_handle(update: Update, context: CallbackContext):
     buf.seek(0)  # move cursor to the beginning of the buffer
 
     transcribed_text = await openai_utils.transcribe_audio(buf)
-    text = t("🎤: <i>{transcribed_text}</i>").format(transcribed_text=transcribed_text)
-    await update.message.reply_text(t("text transcribed, prepare result..."))
+    answer = t("🎤: <i>{transcribed_text}</i>").format(transcribed_text=transcribed_text)
+    # await update.message.reply_text(t("text transcribed, prepare result..."))
     # if len(text) < 500: 
     #     await update.message.reply_text(text, parse_mode=ParseMode.HTML)
     # else:
@@ -684,16 +691,17 @@ async def audio_message_handle(update: Update, context: CallbackContext):
     tokens_per_second = config.models["info"][current_model]["tokens_per_second"]
     db.set_user_attribute(user_id, "n_transcribed_seconds", voice.duration + db.get_user_attribute(user_id, "n_transcribed_seconds"))
     db.update_n_used_tokens(user_id, current_model, 0, int(voice.duration * tokens_per_second))
-
-    await message_handle_fn(update, context, message=update.message.caption_markdown_v2_urled + " " + transcribed_text)
-
+    if update.message.caption is not None:
+            answer = update.message.caption + " " + answer
+    await message_handle_fn(update, context, message=answer)
+    
 async def textdoc_message_handle(update: Update, context: CallbackContext):
     # check if bot was mentioned (for group chats)
     if not await is_bot_mentioned(update, context):
         return
 
-    await register_user_if_not_exists(update, context, update.message.from_user)
-    if await is_previous_message_not_answered_yet(update, context): return
+    # await register_user_if_not_exists(update, context, update.message.from_user)
+    # if await is_previous_message_not_answered_yet(update, context): return
 
     user_id = update.message.from_user.id
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
@@ -715,7 +723,7 @@ async def textdoc_message_handle(update: Update, context: CallbackContext):
     # Convert to a "unicode" object
     text = byte_str.decode('UTF-8')  # Or use the encoding you expect
 
-    await message_handle_fn(update, context, message=update.message.caption_markdown_v2_urled + " " + text)
+    await message_handle_fn(update, context, message=update.message.caption + " " + text)
 
 
 async def generate_image_handle(update: Update, context: CallbackContext, message=None):
@@ -1072,7 +1080,7 @@ def run_bot() -> None:
     application.add_handler(CommandHandler("help", help_handle, filters=user_filter))
     application.add_handler(CommandHandler("help_group_chat", help_group_chat_handle, filters=user_filter))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND & user_filter, message_handle))
-    application.add_handler(MessageHandler(filters.Document.TEXT & user_filter, textdoc_message_handle))
+    # application.add_handler(MessageHandler(filters.Document.TEXT & user_filter, textdoc_message_handle))
 
     application.add_handler(MessageHandler(filters.PHOTO & ~filters.COMMAND & user_filter, message_handle)) # _vision_message_handle_fn
     application.add_handler(MessageHandler(filters.VIDEO & ~filters.COMMAND & user_filter, unsupport_message_handle)) #unsupport_message_handle

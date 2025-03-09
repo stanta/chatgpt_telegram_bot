@@ -195,7 +195,7 @@ class ChatGPT:
             try:
                 # if self.model == "gpt-4-vision-preview" or self.model == "gpt-4o":
                 messages = self._generate_prompt_messages(
-                    message, dialog_messages, chat_mode, image_buffer,  prompt = t("Read and reproduce literally text on image using same language, try to understand what draw on pictures and describe in same language.")
+                    message, dialog_messages, chat_mode, image_buffer,  prompt = t("Carefully recognize and, then,  reproduce literally text on image using same language, also, carefully  try to understand what draw on pictures and describe in same language.")
                 )
                 r = await  client.chat.completions.create(model= "gpt-4o-mini", #self.model, 
                 messages=messages,
