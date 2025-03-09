@@ -200,7 +200,7 @@ class ChatGPT:
         for dialog_message in dialog_messages:
             messages.append({"role": "user", "content": dialog_message["user"]})
             messages.append({"role": "assistant", "content": dialog_message["assistant"]})
-        messages.append({"role": "user", "content": message + t(" FORMAT ANSWER EXACTLY AS ") + config.chat_modes[chat_mode]["parse_mode"]})
+        messages.append({"role": "user", "content": message + t(" FORMAT ANSWER EXACTLY AS ") + config.chat_modes["assistant"]["parse_mode"]})
         return messages
 
     def _postprocess_answer(self, answer):
