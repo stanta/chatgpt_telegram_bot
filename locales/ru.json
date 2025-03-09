@@ -52,5 +52,5 @@
     "Exception while handling an update:": "Исключение при обработке обновления:",
     "An exception was raised while handling an update\n<pre>update = ": "Возникло исключение при обработке обновления\n<pre>update = ",
     "Nice to see you again! Some time gone, want to start /new dialog (make new chat context, save tokens) or continue this chat (spend more tokens)": "Приятно снова вас видеть! Прошло некоторое время, хотите начать новый диалог /new   (создать новый контекст чата, сэкономить токены) или продолжить этот чат (потратить больше токенов)?",
-    "Read text on image, try to understand what draw on pictures and describe in it own language.": "Прочитай текст на изображении, попытайся понять, что нарисовано на картинках и опиши это на том же языке."
+    "Carefully recognize and, then,  reproduce literally text on image using same language, also, carefully  try to understand what draw on pictures and describe in same language.": "Тщательно распознайте и затем дословно воспроизведите текст на изображении, используя тот же язык, также внимательно попытайтесь понять, что нарисовано на картинках и опишите на том же языке."
 }
