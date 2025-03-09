@@ -437,7 +437,7 @@ async def message_handle_fn(update: Update, context: CallbackContext,  message: 
                     if parse_mode == ParseMode.HTML:
                         escaped_answer = html.escape(answer)
                     elif parse_mode == ParseMode.MARKDOWN:
-                        escaped_answer = markdown(answer)
+                        escaped_answer = answer
                     else:
                         escaped_answer = answer
 
