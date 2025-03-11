@@ -1,4 +1,5 @@
 import logging
+import json
 from telegram import Update, LabeledPrice
 from telegram.ext import Application, CommandHandler,  CallbackContext, PreCheckoutQueryHandler
 
@@ -10,21 +11,22 @@ import database
 from i18n import t
 
 # Configuration
-return_url = "https://t.me/Yours_coach_bot"  #TODO: change to get  this from config or from bot data
+# return_url = "https://t.me/Yours_coach_bot"  #TODO: change to get  this from config or from bot data
 
 db = database.Database()
 logger = logging.getLogger(__name__)
 # yookassa.Configuration.configure (config.yookassa_shop_id, config.yookassa_api_key, logger=logger)
 
-async def create_order(currency, price, amount, update: Update = {}, context:CallbackContext = {}):
+async def create_order(params,  update: Update = {}, context:CallbackContext = {}):
     try:
         chat_id = update.message.chat_id if update.message else update.callback_query.message.chat_id
-        
+        currency, price, amount = params
+        payload = json.dumps(params)
         await context.bot.send_invoice(
             chat_id=chat_id,
             title="Exams AI Coach tokens",
             description=f"Order for {amount} Exams AI Coach tokens  INV-Stars-ExamsCoach-{datetime.now().strftime('%Y%m%d%H%M%S')}",
-            payload= amount, #f"INV-ExamsCoach-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+            payload= payload, #f"INV-ExamsCoach-{datetime.now().strftime('%Y%m%d%H%M%S')}",
             provider_token="",  # Пустой токен для цифровых товаров
             currency=currency,
             prices=  [LabeledPrice("Exams AI Coach tokens", int(float(price) * float(amount)))],
@@ -46,7 +48,8 @@ async def precheckout_callback(update: Update, context: CallbackContext):
 async def successful_payment_callback(update: Update, context: CallbackContext):
     payment = update.message.successful_payment
     telegram_payment_charge_id = payment.telegram_payment_charge_id
-    db.add_balance(update.effective_user.id, int(payment.invoice_payload) )
+    params = json.loads(payment.invoice_payload)
+    db.add_balance(update.effective_user.id, params )
 
     await update.message.reply_text(t(f"Payment received ID: {telegram_payment_charge_id}"))
 

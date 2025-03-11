@@ -78,14 +78,19 @@ def split_text_into_chunks(text, chunk_size):
 #         )
 #     return False
 
-async def register_user_if_not_exists(update: Update, context: CallbackContext, user: User):
+async def register_user_if_not_exists(
+            update: Update, 
+            context: CallbackContext, 
+            user: User, 
+            referral: int =None):
     if not db.check_if_user_exists(user.id):
         db.add_new_user(
             user.id,
             update.message.chat_id,
             username=user.username,
             first_name=user.first_name,
-            last_name= user.last_name
+            last_name= user.last_name, 
+            referral= referral
         )
         db.start_new_dialog(user.id)
 
@@ -139,8 +144,9 @@ async def is_bot_mentioned(update: Update, context: CallbackContext):
 
 async def start_handle(update: Update, context: CallbackContext):
     i18n.set('locale', update.message.from_user.language_code)
-    
-    await register_user_if_not_exists(update, context, update.message.from_user)
+    ref_id = update.message.text.split()[1] if len(update.message.text.split()) > 1 else None
+
+    await register_user_if_not_exists(update, context, update.message.from_user, referral = ref_id)
     user_id = update.message.from_user.id
 
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
@@ -150,6 +156,7 @@ async def start_handle(update: Update, context: CallbackContext):
     reply_text += tt (HELP_MESSAGE, update.message.from_user.language_code) 
 
     await update.message.reply_text(reply_text, parse_mode=ParseMode.HTML)
+    
     await show_chat_modes_handle(update, context)
 
 
@@ -1043,6 +1050,13 @@ async def error_handle(update: Update, context: CallbackContext) -> None:
             error_text = t("Some error in error handler. Reason: ") + str(e)
             logger.error(error_text)
 
+async def reflink_handler(update: Update, context: CallbackContext) -> None:
+    # здесь вы можете генерировать идентификатор реферала на основе id пользователя
+    ref_id = update.effective_user.id
+    # bot_username = bot.get_me().username
+    ref_link = f"{context._application.bot.link}/?start={ref_id}"
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=t(f"Your referral link: {ref_link}\nCopy and share this link with your friends. \n My referals: (soon) \n Their purchases: (soon) \n My rewards: \n <Withdraw> (soon) "))
+
 async def post_init(application: Application):
     await application.bot.set_my_commands([
         # BotCommand("/new", t("Start new dialog")),
@@ -1051,6 +1065,7 @@ async def post_init(application: Application):
         # BotCommand("/retry", t("Re-generate response for previous query")),
         BotCommand("/balance", t("Show balance")),
         BotCommand("/settings", t("Show settings")),
+        BotCommand("/reflink", t("Get your referral link")),
         BotCommand("/help", t("Show help message")),
     ])
 
@@ -1110,6 +1125,9 @@ def run_bot() -> None:
     
     application.add_handler(PreCheckoutQueryHandler(precheckout_callback))
     application.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment_callback))
+    
+    application.add_handler(CommandHandler("reflink", reflink_handler))
+
 
     # start the bot
     logger.info(t('bot started...'))

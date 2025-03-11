@@ -77,15 +77,15 @@ async def button_handler(update: Update, context: CallbackContext) -> None:
         match action:
             case "create_order":
                 payserver = arcpay_server
-                (order_created, order) = await payserver.create_order(params[0], params[1], params[2]) #currency, price, amount
+                (order_created, order) = await payserver.create_order(params,  update, context) #currency, price, amount
                 
             case "create_order_card_rf":
                 payserver = yookassa_server
-                (order_created, order) = await payserver.create_order(params[0], params[1], params[2]) #currency, price, amount
+                (order_created, order) = await payserver.create_order(params,  update, context) #currency, price, amount
                 
             case "create_order_stars":
                 payserver = stars_server
-                (order_created, order) = await payserver.create_order(params[0], params[1], params[2], update, context) #currency, price, amount
+                (order_created, order) = await payserver.create_order(params, update, context) #currency, price, amount
 
             case _:
                 return
@@ -134,7 +134,7 @@ async def button_handler(update: Update, context: CallbackContext) -> None:
     😇 PAYED SUCCESSFULLY ✅ 
                 """)
                         await query.edit_message_text(formatted_status, parse_mode=ParseMode.MARKDOWN)
-                        db.add_balance(update.effective_user.id,  params[2])
+                        db.add_balance(update.effective_user.id,  params) #params currency, price, amount
 
                     case "create_order_card_rf":
                         formatted_status = t(f"""
@@ -143,7 +143,7 @@ async def button_handler(update: Update, context: CallbackContext) -> None:
     😇 PAYED SUCCESSFULLY ✅ 
         """)
                         await query.edit_message_text(formatted_status, parse_mode=ParseMode.MARKDOWN)
-                        db.add_balance(update.effective_user.id,  params[2])
+                        db.add_balance(update.effective_user.id,  params)
             else:
                 match action:
                     case "create_order":           

@@ -15,13 +15,14 @@ import database
 from i18n import t
 
 # Configuration
-return_url = "https://t.me/Yours_coach_bot"  #TODO: change to get  this from config or from bot data
+# return_url = "https://t.me/Yours_coach_bot"  #TODO: change to get  this from config or from bot data
 
 db = database.Database()
 logger = logging.getLogger(__name__)
 yookassa.Configuration.configure (config.yookassa_shop_id, config.yookassa_api_key, logger=logger)
 
-async def create_order(currency, price, amount):
+async def create_order(params,  update: Update = {}, context:CallbackContext = {}):
+    currency, price, amount = params    
     try:
         payment_data = {
             "amount": {
@@ -30,7 +31,7 @@ async def create_order(currency, price, amount):
             },
             "confirmation": {
                 "type": "redirect",
-                "return_url": return_url
+                "return_url": context._application.bot.link
             },
             "capture": True,
             "description": f"Order for {amount} tokens",
@@ -57,7 +58,7 @@ async def check_order(order_id):
     for _ in range(60):
         await asyncio.sleep(10)
         try:
-            payment = yookassa.Payment.find_one(order_id)
+            payment = yookassa.Payment.find_one(order_id.id)
             if payment.status == 'succeeded':
                 logger.info(f"Order {order_id} ({payment['metadata']['orderId']}) paid successfully")
                 return (True, payment)

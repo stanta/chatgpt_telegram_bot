@@ -22,8 +22,8 @@ db = database.Database()
 logger = logging.getLogger(__name__)
 
 
-async def create_order(currency, price, amount):
-
+async def create_order(params,  update: Update = {}, context:CallbackContext = {}):
+    currency, price, amount = params
     # request_data = await request.json()
 
     # print(request_data)
@@ -61,7 +61,7 @@ async def check_order (orderId):
         await asyncio.sleep(10)
         async with ClientSession() as session:
             try:    
-                async with session.get(config.arcpay_url + "/" + orderId ) as response:
+                async with session.get(config.arcpay_url + "/" + orderId['uuid'] ) as response:
                     if response.status == 200:
                         result = await response.json()
                         

@@ -24,6 +24,10 @@ class Database:
         self.dialog_message_collection.create_index(
             [("dialog_id", pymongo.ASCENDING), ("date", pymongo.ASCENDING)]
         )
+        # Добавляем коллекцию для платежей в __init__
+        self.payments_collection = self.db["payments"]
+        self.payments_collection.create_index([("date", pymongo.ASCENDING)])
+        self.payments_collection.create_index([("currency", pymongo.ASCENDING)])
 
     def check_if_user_exists(self, user_id: int, raise_exception: bool = False):
         if self.user_collection.count_documents({"_id": user_id}) > 0:
@@ -41,6 +45,7 @@ class Database:
         username: str = "",
         first_name: str = "",
         last_name: str = "",
+        referral: int = None
     ):
         user_dict = {
             "_id": user_id,
@@ -49,6 +54,7 @@ class Database:
             "username": username,
             "first_name": first_name,
             "last_name": last_name,
+            "referral": referral,
 
             "last_interaction": datetime.now(),
             "first_seen": datetime.now(),
@@ -63,7 +69,7 @@ class Database:
             "n_transcribed_seconds": 0.0,  # voice message transcription
 
             "balance": config.init_user_balance,  # in TOKENS
-            "last_pit_stop_message_number": 0
+            "last_pit_stop_message_number": 0,
         }
 
         if not self.check_if_user_exists(user_id):
@@ -156,14 +162,24 @@ class Database:
         balance =  float(bal_attr) if bal_attr !="" else 0
         return  int(balance) >= 0
 
-    def add_balance(self, user_id: int, amount: float):
+    def add_balance(self, 
+                    user_id: int, 
+                    params: [] ):#params currency, price, amount
+        currency, price, amount_tokens = params
         balance = self.get_user_attribute(user_id, "balance")
         if balance is None:
-            balance = float(amount)  # обратная совместимость для старых пользователей
+            balance = float(amount_tokens)  # обратная совместимость для старых пользователей
         else:
-            balance += float(amount)
+            balance += float(amount_tokens)
         self.set_user_attribute(user_id, "balance", balance)
-
+        self.add_payment(
+                user_id, 
+                datetime.now(),
+                currency,
+                float(price) * int(amount_tokens),
+                int(amount_tokens)
+            )
+        
     # ===== Новые методы работы с сообщениями диалога =====
 
     def _migrate_legacy_messages(self, dialog_id: str):
@@ -368,3 +384,28 @@ class Database:
 
     # Метод get_dialog_messages (без дополнительных параметров) можно оставить для обратной совместимости,
     # так как он вызывает новую реализацию с фильтрами, если они не заданы.
+
+    def add_payment(
+        self,
+        user_id: int,
+        payment_date: datetime,
+        currency: str,
+        amount_money: float,
+        amount_tokens: float
+    ):
+        """
+        Добавляет запись о платеже в базу данных
+        """
+        self.check_if_user_exists(user_id, raise_exception=True)
+        
+        payment_doc = {
+            "user_id": user_id,
+            "date": payment_date,
+            "currency": currency,
+            "amount_money": amount_money,
+            "amount_tokens": amount_tokens
+        }
+        
+        # Вставляем запись в коллекцию платежей
+        self.payments_collection.insert_one(payment_doc)
+        
