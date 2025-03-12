@@ -87,7 +87,7 @@ class ChatGPT:
                 if active_run:
                     # There is an active run, so wait until it completes.
                     run_id = active_run.id
-                    while True:
+                    for i in range(0,100):
                         cur_run = await client.beta.threads.runs.retrieve(thread_id, run_id)
                         if cur_run.status == 'completed':
                             break
@@ -112,11 +112,11 @@ class ChatGPT:
                     )
                     run_id = new_run.id
                     # Wait for the new run to complete.
-                    while True:
+                    for i in range(0,100):
                         cur_run = await client.beta.threads.runs.retrieve(thread_id = thread_id, run_id = run_id)
                         if cur_run.status == 'completed':
                             break
-                        await asyncio.sleep(0.5)
+                        await asyncio.sleep(0.1)
                     response = await client.beta.threads.messages.list(thread_id)
                     answer = response.data[0].content[0].text.value
                     answer = self._postprocess_answer(answer)
@@ -139,7 +139,7 @@ class ChatGPT:
                     # raise ValueError(t("Too many tokens even after reducing dialog messages")) from e
                 # dialog_messages = dialog_messages[1:]
                 # n_first_dialog_messages_removed = n_dialog_messages_before - len(dialog_messages)
-            return answer, (n_input_tokens, n_output_tokens), 0 #n_first_dialog_messages_removed
+        return answer, (n_input_tokens, n_output_tokens), 0 #n_first_dialog_messages_removed
  
     async def send_message_stream(self, message_in, user_id, dialog_messages=[], chat_mode="assistant"):
         if chat_mode not in config.chat_modes.keys():
