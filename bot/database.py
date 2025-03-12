@@ -408,4 +408,20 @@ class Database:
         
         # Вставляем запись в коллекцию платежей
         self.payments_collection.insert_one(payment_doc)
-        
+    
+    def get_payments(self, user_id:int):
+        payments_cursor = self.payments_collection.find({"user_id": user_id}).sort("date", pymongo.DESCENDING).to_list()        
+        return payments_cursor
+
+    def get_referrals_number(self, ref_id):
+        return self.user_collection.count_documents({"referral": str(ref_id)})
+    
+    def get_referalls_purchases(self, ref_id:int):
+        # Получаем пользователей с заданным referral
+        referrals = self.user_collection.find({"referral": str(ref_id)}).to_list(length=None)
+        purchases = 0
+        for ref in referrals:
+            # Получаем платежи для каждого найденного пользователя
+            for pay in self.payments_collection.find({"user_id": ref["_id"]}):
+                purchases += pay.get("amount_tokens", 0.0)
+        return purchases

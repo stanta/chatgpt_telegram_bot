@@ -63,3 +63,4 @@ help_group_chat_video_path = Path(__file__).parent.parent.resolve() / "static" /
 with open(config_dir / "buy_menu_config.yml", "r", encoding="utf-8") as file:
         buy_menu_config = yaml.safe_load(file)
 
+reward_share = config_yaml.get("reward_share", 0.1)

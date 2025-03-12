@@ -1054,8 +1054,13 @@ async def reflink_handler(update: Update, context: CallbackContext) -> None:
     # здесь вы можете генерировать идентификатор реферала на основе id пользователя
     ref_id = update.effective_user.id
     # bot_username = bot.get_me().username
+    referrals_number = db.get_referrals_number(ref_id)
+    referals_purchases = db.get_referalls_purchases(ref_id)
+    rewards = referals_purchases * config.reward_share
+    
     ref_link = f"{context._application.bot.link}/?start={ref_id}"
-    await context.bot.send_message(chat_id=update.effective_chat.id, text=t(f"Your referral link: {ref_link}\nCopy and share this link with your friends. \n My referals: (soon) \n Their purchases: (soon) \n My rewards: \n <Withdraw> (soon) "))
+    
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=t(f"Your referral link: {ref_link}\nCopy and share this link with your friends. \n\nYour referals: {referrals_number} \nTheir purchases: {referals_purchases} tokens\nYour rewards: {rewards} tokens\n\n <Get reward> (coming soon)"))
 
 async def post_init(application: Application):
     await application.bot.set_my_commands([
@@ -1065,7 +1070,7 @@ async def post_init(application: Application):
         # BotCommand("/retry", t("Re-generate response for previous query")),
         BotCommand("/balance", t("Show balance")),
         BotCommand("/settings", t("Show settings")),
-        BotCommand("/reflink", t("Get your referral link")),
+        BotCommand("/reflink", t("Referrals")),
         BotCommand("/help", t("Show help message")),
     ])
 
