@@ -54,17 +54,17 @@ ru:
               submenu:
               - text: "Выберите количество "
                 buttons:
-                - text: "0.13 TON-50000. all words of dialog  with AI tutor"
+                - text: "0.15 TON-50000. all words of dialog  with AI tutor"
                   action: "create_order"
                   params:
                     - "TON"
-                    - "0.0000011"
+                    - "0.0000024"
                     - "50000"          
                 - text: "1.12 ТОН-500 000 всех слов диалога с ИИ репетитором "
                   action: "create_order"
                   params:
                     - "TON"
-                    - "0.0000011"
+                    - "0.0000022"
                     - "500000"
                 - text: "2.02 ТОН-1 000 000 всех слов диалога с ИИ репетитором"
                   action: "create_order"
@@ -150,19 +150,19 @@ en:
                 submenu:
                   - text: "Select Amount"
                     buttons:
-                      - text: "0.13TON-50000. all words of dialog  with AI tutor"
+                      - text: "0.15TON-50000. all words of dialog  with AI tutor"
                         action: "create_order"
                         params:
                           - "TON"
-                          - "0.0000011"
+                          - "0.0000024"
                           - "50000"
                       - text: "1.12 TON- 500 000 all words of dialog  with AI tutor"
                         action: "create_order"
                         params:
                           - "TON"
-                          - "0.0000011"
+                          - "0.0000022"
                           - "500000"
-                      - text: "2.02 TON- 1 000 000 all words of dialog  with AI tutor"
+                      - text: "2.12 TON- 1 000 000 all words of dialog  with AI tutor"
                         action: "create_order"
                         params:
                           - "TON"
