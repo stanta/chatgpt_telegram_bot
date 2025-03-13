@@ -54,12 +54,12 @@ ru:
               submenu:
               - text: "Выберите количество "
                 buttons:
-                - text: "0.15 TON-50000. all words of dialog  with AI tutor"
+                - text: "0.26 TON-100 000 всех слов диалога с ИИ репетитором "
                   action: "create_order"
                   params:
                     - "TON"
                     - "0.0000024"
-                    - "50000"          
+                    - "100000"          
                 - text: "1.12 ТОН-500 000 всех слов диалога с ИИ репетитором "
                   action: "create_order"
                   params:
@@ -102,19 +102,19 @@ en:
           submenu:
             - text: "Select the quantity"
               buttons:
-                - text: "50 stars - 100 000 all words of dialog  with AI tutor"
+                - text: "50 stars - 100 000 for all words of dialog  with AI tutor"
                   action: "create_order_stars"
                   params:
                     - "XTR"
                     - "0.0005"                      
                     - "100000"
-                - text: "225 stars - 500 000 all words of dialog  with AI tutor"
+                - text: "225 stars - 500 000 for all words of dialog  with AI tutor"
                   action: "create_order_stars"
                   params:
                     - "XTR"
                     - "0.00045"
                     - "500000"
-                - text: "400 stars - 1 000 000  all words of dialog  with AI tutor"
+                - text: "400 stars - 1 000 000  for all words of dialog  with AI tutor"
                   action: "create_order_stars"
                   params:
                     - "XTR"
@@ -124,19 +124,19 @@ en:
           submenu:
                   - text: "Select Amount"
                     buttons:
-                      - text: "80 Rub-100 000 all words of dialog  with AI tutor"
+                      - text: "80 Rub-100 000 for all words of dialog  with AI tutor"
                         action: "create_order_card_rf"
                         params:
                           - "RUB"
                           - "0.0008"                      
                           - "100000"
-                      - text: "350 RUB - 500 000 all words of dialog  with AI tutor"
+                      - text: "350 RUB - 500 000 for all words of dialog  with AI tutor"
                         action: "create_order_card_rf"
                         params:
                           - "RUB"
                           - "0.0007"
                           - "500000"
-                      - text: "600 RUB- 1 000 000 all words of dialog  with AI tutor"
+                      - text: "600 RUB- 1 000 000 for all words of dialog  with AI tutor"
                         action: "create_order_card_rf"
                         params:
                           - "RUB"
@@ -150,19 +150,19 @@ en:
                 submenu:
                   - text: "Select Amount"
                     buttons:
-                      - text: "0.15TON-50000. all words of dialog  with AI tutor"
+                      - text: "0.26 TON-100 000 for all words of dialog  with AI tutor"
                         action: "create_order"
                         params:
                           - "TON"
                           - "0.0000024"
-                          - "50000"
-                      - text: "1.12 TON- 500 000 all words of dialog  with AI tutor"
+                          - "100000"
+                      - text: "1.12 TON- 500 000 for all words of dialog  with AI tutor"
                         action: "create_order"
                         params:
                           - "TON"
                           - "0.0000022"
                           - "500000"
-                      - text: "2.12 TON- 1 000 000 all words of dialog  with AI tutor"
+                      - text: "2.12 TON- 1 000 000 for all words of dialog  with AI tutor"
                         action: "create_order"
                         params:
                           - "TON"
@@ -172,19 +172,19 @@ en:
                 submenu:
                   - text: "Select Amount"
                     buttons:
-                      - text: "0.8USDT + 0.02TON- 100 000 all words of dialog  with AI tutor"
+                      - text: "0.8USDT + 0.02TON- 100 000 for all words of dialog  with AI tutor"
                         action: "create_order"
                         params:
                           - "USDT"
                           - "0.000008"
                           - "100000"
-                      - text: "3.5 USDT + 0.02TON- 500 000 all words of dialog  with AI tutor"
+                      - text: "3.5 USDT + 0.02TON- 500 000 for all words of dialog  with AI tutor"
                         action: "create_order"
                         params:
                           - "USDT"
                           - "0.000007"
                           - "500000"
-                      - text: "6 USDT + 0.02TON -1 000 000 all words of dialog  with AI tutor"
+                      - text: "6 USDT + 0.02TON -1 000 000 for all words of dialog  with AI tutor"
                         action: "create_order"
                         params:
                           - "USDT"
