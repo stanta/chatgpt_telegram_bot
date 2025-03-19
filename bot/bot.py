@@ -1079,7 +1079,7 @@ async def post_init(application: Application):
         BotCommand("/help", t("Show help message")),
     ])
     job_queue = application.job_queue
-    job_queue.run_repeating(check_inactivity_job, interval=60*60*24, first=10) # every hour, starting in 10 seconds
+    job_queue.run_repeating(check_inactivity_job, interval=60*60*24, first=1) # every hour, starting in 10 seconds
 
 def run_bot() -> None:
     application = (
