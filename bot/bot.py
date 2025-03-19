@@ -41,6 +41,8 @@ import database
 import openai_utils
 import openai_assistant_utils
 
+from broadcasting import check_user_inactivity
+
 from stars_server import precheckout_callback, successful_payment_callback
 
 ROOT_DIR = path.abspath(".")
@@ -1062,6 +1064,9 @@ async def reflink_handler(update: Update, context: CallbackContext) -> None:
     
     await context.bot.send_message(chat_id=update.effective_chat.id, text=t(f"Your referral link: {ref_link}\nCopy and share this link with your friends. \n\nYour referals: {referrals_number} \nTheir purchases: {referals_purchases} tokens\nYour rewards: {rewards} tokens\n\n <Get reward> (coming soon)"))
 
+async def check_inactivity_job(context: CallbackContext):
+    await check_user_inactivity(context)
+    
 async def post_init(application: Application):
     await application.bot.set_my_commands([
         # BotCommand("/new", t("Start new dialog")),
@@ -1073,6 +1078,8 @@ async def post_init(application: Application):
         BotCommand("/reflink", t("Referrals")),
         BotCommand("/help", t("Show help message")),
     ])
+    job_queue = application.job_queue
+    job_queue.run_repeating(check_inactivity_job, interval=60*60*24, first=10) # every hour, starting in 10 seconds
 
 def run_bot() -> None:
     application = (

@@ -30,7 +30,7 @@ OPENAI_COMPLETION_OPTIONS = {
 db = database.Database()
 
 class ChatGPT:
-    def __init__(self, model="gpt-3.5-turbo"):
+    def __init__(self, model="o3-mini"):
         # assert model in {
         #     "text-davinci-003",
         #     "gpt-3.5-turbo-16k",
