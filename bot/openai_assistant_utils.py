@@ -9,6 +9,7 @@ from event_handler import EventHandler
 from i18n import t
 from openai import AsyncOpenAI, OpenAI
 import asyncio
+from openai_utils import len_in_tokens
 # setup openai client
 client = AsyncOpenAI(api_key=config.openai_api_key,
                     organization=config.openai_api_organization
@@ -120,14 +121,16 @@ class ChatGPT:
                     response = await client.beta.threads.messages.list(thread_id)
                     answer = response.data[0].content[0].text.value
                     answer = self._postprocess_answer(answer)
-                    
-                    # if hasattr(cur_run, "usage") and cur_run.usage is not None:
-                    n_input_tokens = cur_run.usage.prompt_tokens
-                    n_output_tokens = cur_run.usage.completion_tokens
-                    # else:
-                    #     n_input_tokens, n_output_tokens = self._count_tokens_from_messages(
-                    #     messages, answer, model=self.model
-                    #     )
+                    n_input_tokens = 0
+                    n_output_tokens = 0
+                    if hasattr(cur_run, "usage") and cur_run.usage is not None:
+                        n_input_tokens = cur_run.usage.prompt_tokens
+                        n_output_tokens = cur_run.usage.completion_tokens
+                    else:
+                        for message in response.data:
+                            n_input_tokens += len_in_tokens(message.content[0].text.value)
+                        n_output_tokens = len_in_tokens(answer)
+                            
                     # Optionally cancel or mark the run as done if needed.                    
                     # n_input_tokens, n_output_tokens = self._count_tokens_from_messages(
                     #     messages, answer, model=self.model

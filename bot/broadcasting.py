@@ -41,6 +41,8 @@ async def check_user_inactivity(context: CallbackContext, threshold_minutes: int
         elif user["balance"] < 0:
             message_text = username + config.chat_modes["assistant"]["prompt_negative_balance"]
         else:
+            n_input_tokens = 0
+            n_output_tokens = 0
             chatgpt_instance = openai_assistant_utils.ChatGPT(model="gpt-4o-mini")
             (answer, (n_input_tokens, n_output_tokens), _) = await chatgpt_instance.send_message(
                 config.chat_modes["assistant"]["prompt_continue"], user_id
