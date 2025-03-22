@@ -152,6 +152,7 @@ async def start_handle(update: Update, context: CallbackContext):
     user_id = update.message.from_user.id
 
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
+    db.set_user_attribute(user_id, "blocked", False)
     db.start_new_dialog(user_id)
 
     reply_text = t("Hi! I'm <b>ExamsCoach</b> bot🤖\n\n")
@@ -166,6 +167,7 @@ async def help_handle(update: Update, context: CallbackContext):
     await register_user_if_not_exists(update, context, update.message.from_user)
     user_id = update.message.from_user.id
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
+    db.set_user_attribute(user_id, "blocked", False)
     await update.message.reply_text(tt(HELP_MESSAGE, update.message.from_user.language_code), parse_mode=ParseMode.HTML)
 
 
@@ -176,6 +178,8 @@ async def help_group_chat_handle(update: Update, context: CallbackContext):
      await register_user_if_not_exists(update, context, update.message.from_user)
      user_id = update.message.from_user.id
      db.set_user_attribute(user_id, "last_interaction", datetime.now())
+     db.set_user_attribute(user_id, "blocked", False)
+     
      h_g_c_m = tt( HELP_GROUP_CHAT_MESSAGE, update.message.from_user.language_code) 
      text = h_g_c_m.format(bot_username="@" + context.bot.username)
 
@@ -189,6 +193,7 @@ async def retry_handle(update: Update, context: CallbackContext):
 
     user_id = update.message.from_user.id
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
+    db.set_user_attribute(user_id, "blocked", False)    
     pit_stop_message_number = db.get_dialog_attribute(user_id, key = "last_pit_stop_message_number")
     dialog_messages = db.get_dialog_messages(user_id, dialog_id=None, message_start = pit_stop_message_number)
     if len(dialog_messages) == 0:
@@ -535,6 +540,8 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
     if update.edited_message is not None:
         await edited_message_handle(update, context)
         return
+    # re-activate user if blocked to messsage them
+    
 
     _message = message or update.message.text
 #TODO      replied_message = update.message.reply_to_message if update.message.reply_to_message else update.message.forward_from_message
@@ -549,6 +556,7 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
     
     # Проверяем, достаточно ли у пользователя средств
     user_id = update.message.from_user.id
+    db.set_user_attribute(user_id, "blocked", False)
     if not db.check_balance_positive(user_id):
         await context.bot.send_message(
             chat_id=update.message.chat_id,
@@ -770,6 +778,7 @@ async def new_dialog_handle(update: Update, context: CallbackContext):
 
     user_id = update.message.from_user.id
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
+    db.set_user_attribute(user_id, "blocked", False)
     if db.get_user_attribute(user_id, "current_model") not in  config.models["available_text_models"]:
         db.set_user_attribute(user_id,  "current_model",  config.models["available_text_models"][0] ) 
     # db.set_user_attribute(user_id,  "locale", update.message.from_user.language_code ) 
@@ -1079,7 +1088,7 @@ async def post_init(application: Application):
         BotCommand("/help", t("Show help message")),
     ])
     job_queue = application.job_queue
-    job_queue.run_repeating(check_inactivity_job, interval=60*60*24, first=1) # every hour, starting in 10 seconds
+    job_queue.run_repeating(check_inactivity_job, interval=60*60*48, first=1) # every 48 hour, starting in 10 seconds
 
 def run_bot() -> None:
     application = (
