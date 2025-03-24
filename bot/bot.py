@@ -44,6 +44,7 @@ import openai_assistant_utils
 from broadcasting import check_user_inactivity
 
 from stars_server import precheckout_callback, successful_payment_callback
+from referals import reflink_handler, withdraw_handler
 
 ROOT_DIR = path.abspath(".")
 localedir = path.join(ROOT_DIR, 'locales')
@@ -1061,18 +1062,6 @@ async def error_handle(update: Update, context: CallbackContext) -> None:
             error_text = t("Some error in error handler. Reason: ") + str(e)
             logger.error(error_text)
 
-async def reflink_handler(update: Update, context: CallbackContext) -> None:
-    # здесь вы можете генерировать идентификатор реферала на основе id пользователя
-    ref_id = update.effective_user.id
-    # bot_username = bot.get_me().username
-    referrals_number = db.get_referrals_number(ref_id)
-    referals_purchases = db.get_referalls_purchases(ref_id)
-    rewards = referals_purchases * config.reward_share
-    
-    ref_link = f"{context._application.bot.link}/?start={ref_id}"
-    
-    await context.bot.send_message(chat_id=update.effective_chat.id, text=t(f"Your referral link: {ref_link}\nCopy and share this link with your friends. \n\nYour referals: {referrals_number} \nTheir purchases: {referals_purchases} tokens\nYour rewards: {rewards} tokens\n\n <Get reward> (coming soon)"))
-
 async def check_inactivity_job(context: CallbackContext):
     await check_user_inactivity(context)
     
@@ -1136,7 +1125,8 @@ def run_bot() -> None:
 
     application.add_handler(CommandHandler("settings", settings_handle, filters=user_filter))
     application.add_handler(CallbackQueryHandler(set_settings_handle, pattern="^set_settings"))
-
+    application.add_handler(CommandHandler("reflink", reflink_handler))
+    application.add_handler(CallbackQueryHandler(withdraw_handler, pattern="^withdraw_handler$"))
     application.add_handler(CommandHandler("balance", show_balance_handle, filters=user_filter))
     application.add_handler(CommandHandler("buy", menu_start, filters=user_filter))
     application.add_handler(CallbackQueryHandler(button_handler))
@@ -1147,7 +1137,6 @@ def run_bot() -> None:
     application.add_handler(PreCheckoutQueryHandler(precheckout_callback))
     application.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment_callback))
     
-    application.add_handler(CommandHandler("reflink", reflink_handler))
 
 
     # start the bot

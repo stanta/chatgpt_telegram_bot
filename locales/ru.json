@@ -53,6 +53,10 @@
     "An exception was raised while handling an update\n<pre>update = ": "Возникло исключение при обработке обновления\n<pre>update = ",
     "Nice to see you again! Some time gone, want to start /new dialog (make new chat context, save tokens) or continue this chat (spend more tokens)": "Приятно снова вас видеть! Прошло некоторое время, хотите начать новый диалог /new   (создать новый контекст чата, сэкономить токены) или продолжить этот чат (потратить больше токенов)?",
     "Carefully recognize and, then,  reproduce literally text on image using same language, also, carefully  try to understand what draw on pictures and describe in same language.": "Тщательно распознайте и затем дословно воспроизведите текст на изображении, используя тот же язык, также внимательно попытайтесь понять, что нарисовано на картинках и опишите на том же языке.",
-    "Your referral link: {ref_link}\nCopy and share this link with your friends. \n\nYour referals: {referrals_number} \nTheir purchases: {referals_purchases} tokens\nYour rewards: {rewards} tokens\n\n <Get reward> (coming soon)":"Ваша реферальная ссылка: {ref_link}\nСкопируйте и поделитесь этой ссылкой с друзьями.\n\nВаши рефералы: {referrals_number}\nИх покупки: {referals_purchases} токенов\nВаши награды: {rewards} токенов\n\n<Получить награду> (скоро)",
-    "Referrals": "Рефералы"
+    "Your referral link: {ref_link}\nCopy and share this link with your friends. \n\nYour referals: {referrals_number} \nTheir purchases: {referals_purchases} tokens\nYour rewards: {rewards} tokens\n\n":"Ваша реферальная ссылка: {ref_link}\nСкопируйте и поделитесь этой ссылкой с друзьями.\n\nВаши рефералы: {referrals_number}\nИх покупки: {referals_purchases} токенов\nВаши награды: {rewards} токенов\n\n",
+    "Referrals": "Рефералы",
+    "Withdraw": "Вывод",
+    "No rewards to withdraw":"Нет доступных средств для вывода",
+    "You have successfully withdrawn {rewards} tokens to your /balance":"Вы успешно вывели {rewards} токенов на ваш /balance",
+    "Rewards withdrawn successfully":"Вывод средств прошёл успешно"
 }
