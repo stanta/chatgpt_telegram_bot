@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 from i18n import t
 from telegram.ext import CallbackContext
 from telegram.error import Forbidden
+from openai_utils import get_message_embedding
 
 db = database.Database()
 logger = logging.getLogger(__name__)
@@ -90,6 +91,11 @@ async def check_user_inactivity(context: CallbackContext, threshold_minutes: int
                     "assistant": message_text,
                     "date": datetime.now() + timedelta(seconds=delay),
                 }
-        await db.add_dialog_message(user_id, new_dialog_message, dialog_id=None)
+        # вычисляем эмбеддинг и токены
+        user_text = "".join(part.get("text", "") for part in new_dialog_message["user"] if part.get("type")=="text")
+        assistant_text = new_dialog_message.get("assistant", "")
+        vectorized, n_tokens_vect = await get_message_embedding(user_text + " " + assistant_text)
+        await db.update_n_used_tokens(user_id, "text-embedding-ada-002", n_tokens_vect, 0)
+        await db.add_dialog_message(user_id, new_dialog_message, dialog_id=None, vectorized=vectorized)
         # Планируем нерBlocking отправку сообщения
         asyncio.create_task(send_delayed_message(context.bot, user["chat_id"], message_text, delay, user_id))

@@ -1,4 +1,4 @@
-from typing import Optional, Any, List, Decimal
+from typing import Optional, Any, List
 import pymongo
 import uuid
 import json
@@ -386,7 +386,7 @@ class Database:
             {"$set": {"last_message_number": message_number}}
         )
 
-    async def add_dialog_message(self, user_id: int, message: Any, vectorized: Optional[list[Decimal]] = None, dialog_id: Optional[str] = None):
+    async def add_dialog_message(self, user_id: int, message: Any, vectorized: Optional[list[Any]] = None, dialog_id: Optional[str] = None):
         """
         Добавляет одно сообщение в диалог с векторным хранением для MongoDB Atlas.
         """
@@ -426,7 +426,7 @@ class Database:
 
         # normalize assistant field
         assistant_text = str(msg_dict["assistant"])
-        vectorized = await get_message_embedding(user_text + " " + assistant_text)
+        # vectorized = await get_message_embedding(user_text + " " + assistant_text)
         new_msg_doc = {
             "dialog_id":    dialog_id,
             "message_number": message_number,
@@ -456,7 +456,7 @@ class Database:
                 "$search": {
                     "index": "vector_idx",
                     "knnBeta": {
-                        "vector": embedding,
+                        "vector": embedding[0],
                         "path": "vectorized",
                         "k": top_k
                     }
@@ -475,11 +475,11 @@ class Database:
         ]
 
         # Выполняем запрос
-        results = self.dialog_message_collection.aggregate(pipeline)
-        
+        raw_cursor = await self.dialog_message_collection.aggregate(pipeline)
+        docs = await raw_cursor.to_list(length=top_k)        
         # Собираем найденные записи
         contexts = []
-        for doc in results:
+        for doc in docs:
             # Формируем строку контекста из полей user и assistant
             context_str = f"User: {doc.get('user', '')}\nAssistant: {doc.get('assistant', '')}"
             contexts.append(context_str)

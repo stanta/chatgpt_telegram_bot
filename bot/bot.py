@@ -40,6 +40,7 @@ import database
 
 import openai_utils
 import openai_assistant_utils
+from openai_utils import get_message_embedding
 
 from broadcasting import check_user_inactivity
 
@@ -496,7 +497,12 @@ async def message_handle_fn(update: Update, context: CallbackContext,  message: 
                 "assistant": answer,
                 "date": datetime.now()
             }
-            await db.add_dialog_message(user_id, new_dialog_message, dialog_id=None)
+            # вычисляем эмбеддинг и учет токенов
+            user_text = " ".join(part.get("text","") for part in new_dialog_message["user"] if part.get("type")=="text")
+            assistant_text = new_dialog_message.get("assistant","")
+            vectorized, n_tokens_vect = await get_message_embedding(user_text + " " + assistant_text)
+            await db.update_n_used_tokens(user_id, "text-embedding-ada-002", n_tokens_vect, 0)
+            await db.add_dialog_message(user_id, new_dialog_message, dialog_id=None, vectorized=vectorized)
 
             # Обновляем информацию по использованным токенам и балансу пользователя
             await db.update_n_used_tokens(user_id, current_model, n_input_tokens, n_output_tokens)
@@ -517,7 +523,8 @@ async def message_handle_fn(update: Update, context: CallbackContext,  message: 
                     "date": datetime.now()
                 }
                 # Вместо перезаписи всего списка, добавляем новое сообщение
-                await db.add_dialog_message(user_id, new_dialog_message, dialog_id=None)    
+                vectorized, n_tokens_vect = await get_message_embedding( answer)
+                await db.add_dialog_message(user_id, new_dialog_message, dialog_id=None, vectorized=vectorized)    
                 # Сбрасываем счётчик использованных токенов
                 await db.set_dialog_attribute(user_id, key = "n_used_tokens_dialog", value = 0)        
 
@@ -762,7 +769,12 @@ async def textdoc_message_handle(update: Update, context: CallbackContext):
                 "assistant": "",
                 "date": datetime.now()
             }
-    await db.add_dialog_message(user_id, new_dialog_message, dialog_id=None)
+    # вычисляем эмбеддинг и учет токенов
+    user_text = new_dialog_message["user"][0]["text"]
+    assistant_text = new_dialog_message.get("assistant","")
+    vectorized, n_tokens_vect = await get_message_embedding(user_text + " " + assistant_text)
+    await db.update_n_used_tokens(user_id, "text-embedding-ada-002", n_tokens_vect, 0)
+    await db.add_dialog_message(user_id, new_dialog_message, dialog_id=None, vectorized=vectorized)
 
     await message_handle_fn(update, context, message=update.message.caption or "")
 
@@ -804,7 +816,12 @@ async def pdf_doc_message_handle(update: Update, context: CallbackContext):
                 "assistant": "",
                 "date": datetime.now()
             }
-    await db.add_dialog_message(user_id, new_dialog_message, dialog_id=None)
+    # вычисляем эмбеддинг и учет токенов
+    user_text = new_dialog_message["user"][0]["text"]
+    assistant_text = new_dialog_message.get("assistant","")
+    vectorized, n_tokens_vect = await get_message_embedding(user_text + " " + assistant_text)
+    await db.update_n_used_tokens(user_id, "text-embedding-ada-002", n_tokens_vect, 0)
+    await db.add_dialog_message(user_id, new_dialog_message, dialog_id=None, vectorized=vectorized)
             
     await message_handle_fn(
         update,
@@ -1177,7 +1194,7 @@ def run_bot() -> None:
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND & user_filter, message_handle))
     application.add_handler(MessageHandler(filters.Document.TEXT & user_filter, textdoc_message_handle))
     application.add_handler(MessageHandler(filters.Document.PDF & user_filter, pdf_doc_message_handle))
-    application.add_handler(MessageHandler(filters.PHOTO & ~filters.COMMAND & user_filter, message_handle)) # _vision_message_handle_fn
+    application.add_handler(MessageHandler(filters.PHOTO & ~filters.COMMAND & user_filter, message_handle)) # _vision_message_handle
     application.add_handler(MessageHandler(filters.VIDEO & ~filters.COMMAND & user_filter, unsupport_message_handle)) #unsupport_message_handle
     application.add_handler(MessageHandler(filters.VOICE & user_filter, message_handle )) #voice_message_handle
     application.add_handler(MessageHandler(filters.AUDIO & user_filter,message_handle )) #audio_message_handle
