@@ -33,7 +33,7 @@ from telegram.constants import ParseMode, ChatAction
 
 import i18n
 from i18n import t
-from staff import tt
+from staff import tt, split_text_into_chunks
 from buy import menu_start, button_handler
 import config
 import database
@@ -45,6 +45,7 @@ from broadcasting import check_user_inactivity
 
 from stars_server import precheckout_callback, successful_payment_callback
 from referals import reflink_handler, withdraw_handler
+from PyPDF2 import PdfReader
 
 ROOT_DIR = path.abspath(".")
 localedir = path.join(ROOT_DIR, 'locales')
@@ -67,9 +68,9 @@ HELP_MESSAGE = config.help_message
 HELP_GROUP_CHAT_MESSAGE = config.help_group_chat_message
 
 
-def split_text_into_chunks(text, chunk_size):
-    for i in range(0, len(text), chunk_size):
-        yield text[i:i + chunk_size]
+# def split_text_into_chunks(text, chunk_size):
+#     for i in range(0, len(text), chunk_size):
+#         yield text[i:i + chunk_size]
 
 # async def is_no_enough_balance (update: Update, context: CallbackContext):
 #     if not db.check_balance_positive (update.message.from_user.id):
@@ -418,16 +419,18 @@ async def message_handle_fn(update: Update, context: CallbackContext,  message: 
             # (Заметим, что переменная dialog_messages всё ещё содержит старый список – это не критично,
             #  так как для новых сообщений применяется add_dialog_message и номер последнего сообщения обновляется)
             enable_message_streaming =  config.models['info'][current_model]['enable_message_streaming'] if 'enable_message_streaming' in config.models['info'][current_model] else config.enable_message_streaming
+            context_RAG = await db.find_relevant_contexts(_message)
+            message_RAG = _message + t(", also consider the context of the dialog: ") + " ".join(context_RAG)
             if enable_message_streaming:
                 gen = chatgpt_instance.send_message_stream(
-                    _message,
+                    message_RAG,
                     user_id,
                     dialog_messages=dialog_messages,
                     chat_mode=chat_mode
                 )
             else:
                 answer, (n_input_tokens, n_output_tokens), n_first_dialog_messages_removed = await chatgpt_instance.send_message(
-                    _message,
+                    message_RAG,
                     user_id,
                     dialog_messages=dialog_messages,
                     chat_mode=chat_mode
@@ -442,35 +445,47 @@ async def message_handle_fn(update: Update, context: CallbackContext,  message: 
                 status, answer, (n_input_tokens, n_output_tokens), n_first_dialog_messages_removed = gen_item
 
                 # Ограничиваем ответ по лимиту Telegram
-                answer = answer[:4096]
+            answer_chunks = split_text_into_chunks(answer, 4000)
 
-                # Обновляем placeholder-сообщение только если накопилось примерно 100 символов
-                if abs(len(answer) - len(prev_answer)) < 100 and status != "finished":
-                    continue
-
+            for idx, chunk in enumerate(answer_chunks):
                 try:
                     if parse_mode == ParseMode.HTML:
-                        escaped_answer = html.escape(answer)
+                        escaped_chunk = html.escape(chunk)
                     elif parse_mode == ParseMode.MARKDOWN:
-                        escaped_answer = answer
+                        escaped_chunk = chunk
                     else:
-                        escaped_answer = answer
+                        escaped_chunk = chunk
 
-                    await context.bot.edit_message_text(
-                        escaped_answer,
-                        chat_id=placeholder_message.chat_id,
-                        message_id=placeholder_message.message_id,
-                        parse_mode=parse_mode
-                    )
+                    if idx == 0:
+                        # Первое сообщение — редактируем placeholder
+                        await context.bot.edit_message_text(
+                            escaped_chunk,
+                            chat_id=placeholder_message.chat_id,
+                            message_id=placeholder_message.message_id,
+                            parse_mode=parse_mode
+                        )
+                    else:
+                        # Остальные — отправляем как новые сообщения
+                        await context.bot.send_message(
+                            chat_id=placeholder_message.chat_id,
+                            text=escaped_chunk,
+                            parse_mode=parse_mode
+                        )
                 except telegram.error.BadRequest as e:
                     if str(e).startswith("Message is not modified"):
                         continue
                     else:
-                        await context.bot.edit_message_text(
-                            escaped_answer,
-                            chat_id=placeholder_message.chat_id,
-                            message_id=placeholder_message.message_id
-                        )
+                        if idx == 0:
+                            await context.bot.edit_message_text(
+                                escaped_chunk,
+                                chat_id=placeholder_message.chat_id,
+                                message_id=placeholder_message.message_id
+                            )
+                        else:
+                            await context.bot.send_message(
+                                chat_id=placeholder_message.chat_id,
+                                text=escaped_chunk
+                            )
 
                 await asyncio.sleep(0.01)  # Небольшая задержка для избежания флудинга
                 prev_answer = answer
@@ -707,8 +722,8 @@ async def audio_message_handle(update: Update, context: CallbackContext):
     # update n_transcribed_seconds
     current_model = "o3-mini"
     tokens_per_second = config.models["info"][current_model]["tokens_per_second"]
-    db.set_user_attribute(user_id, "n_transcribed_seconds", voice.duration + db.get_user_attribute(user_id, "n_transcribed_seconds"))
-    db.update_n_used_tokens(user_id, current_model, 0, int(voice.duration * tokens_per_second))
+    db.set_user_attribute(user_id, "n_transcribed_seconds", audio.duration + db.get_user_attribute(user_id, "n_transcribed_seconds"))
+    db.update_n_used_tokens(user_id, current_model, 0, int(audio.duration * tokens_per_second))
     if update.message.caption is not None:
             answer = update.message.caption + " " + answer
     await message_handle_fn(update, context, message=answer)
@@ -730,6 +745,7 @@ async def textdoc_message_handle(update: Update, context: CallbackContext):
         await update.message.reply_text(t("starting processing..."))
     else: 
         await update.message.reply_text(t("files > 20mb not supported yet"))
+        return
 
     # store file in memory, not on disk
     buf = io.BytesIO()
@@ -740,9 +756,61 @@ async def textdoc_message_handle(update: Update, context: CallbackContext):
 
     # Convert to a "unicode" object
     text = byte_str.decode('UTF-8')  # Or use the encoding you expect
+    
+    new_dialog_message = {
+                "user": [{"type": "text", "text": (update.message.caption or "") + "\n" + text}],
+                "assistant": "",
+                "date": datetime.now()
+            }
+    db.add_dialog_message(user_id, new_dialog_message, dialog_id=None)
 
-    await message_handle_fn(update, context, message=update.message.caption + " " + text)
+    await message_handle_fn(update, context, message=update.message.caption or "")
 
+async def pdf_doc_message_handle(update: Update, context: CallbackContext):
+    # check if bot was mentioned (for group chats)
+    if not await is_bot_mentioned(update, context):
+        return
+
+    user_id = update.message.from_user.id
+    db.set_user_attribute(user_id, "last_interaction", datetime.now())
+
+    doc = update.message.document 
+    if doc.file_size < 20*1024*1024:
+        doc_file = await context.bot.get_file(doc.file_id)
+        await update.message.reply_text(t("starting processing..."))
+    else: 
+        await update.message.reply_text(t("files > 20mb not supported yet"))
+        return
+
+    # store file in memory, not on disk
+    buf = io.BytesIO()
+    await doc_file.download_to_memory(buf)
+    buf.name = "doc.pdf"  # file extension is required
+    buf.seek(0)  # move cursor к началу буфера
+
+    # Parse PDF content
+    
+    reader = PdfReader(buf)
+    text = ""
+    for page in reader.pages:
+        page_text = page.extract_text()
+        if page_text:
+            text += page_text + "\n"
+    #TODO  если встречена картинка, отправляем ее на распознавание
+    
+    
+    new_dialog_message = {
+                "user": [{"type": "text", "text": (update.message.caption or "") + "\n" + text}],
+                "assistant": "",
+                "date": datetime.now()
+            }
+    db.add_dialog_message(user_id, new_dialog_message, dialog_id=None)
+            
+    await message_handle_fn(
+        update,
+        context,
+        message=(update.message.caption or "") 
+    )
 
 async def generate_image_handle(update: Update, context: CallbackContext, message=None):
     await register_user_if_not_exists(update, context, update.message.from_user)
@@ -1016,7 +1084,6 @@ async def show_balance_handle(update: Update, context: CallbackContext):
 
     # total_n_spent_dollars += voice_recognition_n_spent_dollars
 
-
     # text = t("You spent <b>{dollars:.03f}$</b>\n").format(dollars=total_n_spent_dollars)
     text =  t("Your current balance: <b>{balance}</b> tokens\n\n").format(balance=balance)
     text += t("to get more tokens, /buy \n\n")
@@ -1105,8 +1172,8 @@ def run_bot() -> None:
     application.add_handler(CommandHandler("help", help_handle, filters=user_filter))
     application.add_handler(CommandHandler("help_group_chat", help_group_chat_handle, filters=user_filter))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND & user_filter, message_handle))
-    # application.add_handler(MessageHandler(filters.Document.TEXT & user_filter, textdoc_message_handle))
-
+    application.add_handler(MessageHandler(filters.Document.TEXT & user_filter, textdoc_message_handle))
+    application.add_handler(MessageHandler(filters.Document.PDF & user_filter, pdf_doc_message_handle))
     application.add_handler(MessageHandler(filters.PHOTO & ~filters.COMMAND & user_filter, message_handle)) # _vision_message_handle_fn
     application.add_handler(MessageHandler(filters.VIDEO & ~filters.COMMAND & user_filter, unsupport_message_handle)) #unsupport_message_handle
     application.add_handler(MessageHandler(filters.VOICE & user_filter, message_handle )) #voice_message_handle

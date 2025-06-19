@@ -8,6 +8,9 @@ import openai
 from openai import AsyncOpenAI, OpenAI
 from  i18n import t
 
+# from numpy import dot
+# from numpy.linalg import norm
+
 client = AsyncOpenAI(api_key=config.openai_api_key)
 #client = OpenAI(api_key=config.openai_api_key, base_url=config.openai_api_base)
 
@@ -417,3 +420,39 @@ async def generate_images(prompt, n_images=4, size="512x512"):
 async def is_content_acceptable(prompt):
     r = await client.moderations.create(input=prompt)
     return not all(r.results[0].categories.values())
+
+
+async def get_message_embedding(text, model="text-embedding-ada-002"):
+    """
+    Returns the embedding vector for a given text message, useful for RAG tasks.
+    """
+    result = await client.embeddings.create(model=model, input=text)
+    return result.data[0].embedding
+
+
+# async def retrieve_context(query_text, context_texts, model="text-embedding-ada-002", top_k=3):
+#     """
+#     Получает топ-k наиболее релевантных контекстов для RAG на основе косинусной близости эмбеддингов.
+#     """
+    
+#     # Получаем вектор эмбеддинга запроса
+#     query_embedding = await get_message_embedding(query_text, model=model)
+
+#     # Формируем список (текст, вектор)
+#     contexts_with_embeddings = []
+#     for ctx in context_texts:
+#         embedding = await get_message_embedding(ctx, model=model)
+#         contexts_with_embeddings.append((ctx, embedding))
+
+#     # Считаем косинусное сходство, сортируем и берем top_k
+#     def cos_sim(a, b):
+#         return dot(a, b) / (norm(a) * norm(b))
+
+#     ranked_contexts = sorted(
+#         contexts_with_embeddings,
+#         key=lambda c: cos_sim(query_embedding, c[1]),
+#         reverse=True
+#     )
+
+#     return [ctx[0] for ctx in ranked_contexts[:top_k]]
+

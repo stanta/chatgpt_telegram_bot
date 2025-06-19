@@ -3,7 +3,8 @@ version: "3"
 services:
   mongo_ex:
     container_name: mongo_ex
-    image: mongo:8.0.1
+    # image: mongo:8.0.1
+    image: mongodb/mongodb-atlas-local:latest
     restart: always
     # ports:
     #   - 127.0.0.1:${MONGODB_PORT:-27017}:${MONGODB_PORT:-27017}

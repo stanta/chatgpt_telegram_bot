@@ -30,7 +30,7 @@ n_chat_modes_per_page = config_yaml.get("n_chat_modes_per_page", 5)
 init_user_balance = config_yaml.get("init_user_balance", 100_000) #in tokens
 
 mongo_host=config_env.get("MONGO_HOST", "localhost")
-mongodb_uri = f"mongodb://{mongo_host}:{config_env['MONGODB_PORT']}"
+mongodb_uri = f"mongodb://{mongo_host}:{config_env['MONGODB_PORT']}"+"/?directConnection=true"
 
 arcpay_url = config_yaml["arcpay_url"]
 arc_API_key = config_yaml["arc_API_key"]
@@ -64,3 +64,4 @@ with open(config_dir / "buy_menu_config.yml", "r", encoding="utf-8") as file:
         buy_menu_config = yaml.safe_load(file)
 
 reward_share = config_yaml.get("reward_share", 0.1)
+project_name = config_yaml.get("project_name", "Bot")

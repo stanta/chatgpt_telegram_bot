@@ -4,12 +4,13 @@ import uuid
 import json
 from datetime import datetime
 import config
+from openai_utils import get_message_embedding
 
 
 class Database:
     def __init__(self):
-        self.client = pymongo.MongoClient(config.mongodb_uri)
-        self.db = self.client["chatgpt_telegram_bot"]
+        self.client = pymongo.MongoClient(config.mongodb_uri)        
+        self.db = self.client[config.project_name + "_db"]
 
         self.user_collection = self.db["user"]
         self.dialog_collection = self.db["dialog"]
@@ -24,10 +25,39 @@ class Database:
         self.dialog_message_collection.create_index(
             [("dialog_id", pymongo.ASCENDING), ("date", pymongo.ASCENDING)]
         )
+        
         # Добавляем коллекцию для платежей в __init__
         self.payments_collection = self.db["payments"]
         self.payments_collection.create_index([("date", pymongo.ASCENDING)])
-        self.payments_collection.create_index([("currency", pymongo.ASCENDING)])
+        self.payments_collection.create_index([("currency", pymongo.ASCENDING)])\
+            
+    def create_vector_index_for_dialog_messages(self, dimensions=1536, collection_name="dialog_message"):
+        """
+        Пример создания векторного индекса в MongoDB Atlas через 'createSearchIndexes'.
+        Предполагается, что размерность эмбеддинга совпадает с 'dimensions'.
+        Выполните этот метод один раз после развертывания, чтобы включить поиск по векторному полю.
+        """
+        command = {
+            "createSearchIndexes": collection_name,
+            "indexes": [
+                {
+                    "name": "vector_idx",
+                    "definition": {
+                        "mappings": {
+                            "dynamic": False,
+                            "fields": {
+                                "vectorized": {
+                                    "type": "knnVector",
+                                    "dimensions": dimensions,
+                                    "similarity": "cosine"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+        self.db.command(command)
 
     def check_if_user_exists(self, user_id: int, raise_exception: bool = False):
         if self.user_collection.count_documents({"_id": user_id}) > 0:
@@ -338,19 +368,16 @@ class Database:
 
     def add_dialog_message(self, user_id: int, message: Any, dialog_id: Optional[str] = None):
         """
-        Добавляет одно сообщение в диалог.
-        Аргумент message может быть либо dict, либо JSON-строкой с ключами 'user', 'assistant' и 'date'.
-        При добавлении выполняется атомарное инкрементирование номера сообщения.
+        Добавляет одно сообщение в диалог с векторным хранением для MongoDB Atlas.
         """
         self.check_if_user_exists(user_id, raise_exception=True)
 
         if dialog_id is None:
             dialog_id = self.get_user_attribute(user_id, "current_dialog_id")
 
-        # Если есть legacy-сообщения – мигрируем их
-        self._migrate_legacy_messages(dialog_id)
+        # Мигрируем любые legacy-сообщения
+        # self._migrate_legacy_messages(dialog_id)
 
-        # Атомарно увеличиваем счётчик сообщений в документе диалога
         updated_dialog = self.dialog_collection.find_one_and_update(
             {"_id": dialog_id},
             {"$inc": {"last_message_number": 1}},
@@ -359,6 +386,7 @@ class Database:
         message_number = updated_dialog.get("last_message_number", 1)
 
         if isinstance(message, str):
+            import json
             try:
                 msg_dict = json.loads(message)
             except Exception:
@@ -368,22 +396,77 @@ class Database:
         else:
             raise ValueError("Сообщение должно быть строкой или словарем")
 
-        # try:
-        #     msg_date = datetime.strptime(msg_dict.get("date", ""), "%Y-%m-%d %H:%M:%S")
-        # except Exception:
-        #     msg_date = datetime.now()
+        # normalize user field
+        user_field = msg_dict["user"]
+        if isinstance(user_field, list):
+            # join list elements into one string
+            user_text = ";".join(map(str, user_field))
+        else:
+            user_text = str(user_field)
 
+        # normalize assistant field
+        assistant_text = str(msg_dict["assistant"])
+        vectorized =  get_message_embedding(user_text + " " + assistant_text)
         new_msg_doc = {
-            "dialog_id": dialog_id,
+            "dialog_id":    dialog_id,
             "message_number": message_number,
-            "user": msg_dict["user"],
-            "assistant": msg_dict["assistant"],
-            "date": msg_dict["date"]
+            "user":         msg_dict["user"],
+            "assistant":    msg_dict["assistant"],
+            "date":         msg_dict["date"],
+            "vectorized":   vectorized
         }
         self.dialog_message_collection.insert_one(new_msg_doc)
 
+
     # Метод get_dialog_messages (без дополнительных параметров) можно оставить для обратной совместимости,
     # так как он вызывает новую реализацию с фильтрами, если они не заданы.
+
+    async def find_relevant_contexts(self, query_text: str, top_k: int = 3):
+        """
+        Выполняет поиск по векторному полю 'vectorized' в dialog_message_collection и возвращает
+        наиболее релевантные фрагменты контекста, взятые из полей 'user' и 'assistant'.
+        Требует заранее созданного индекса (см. create_vector_index_for_dialog_messages).
+        """
+        # Получаем вектор эмбеддинга запроса
+        embedding = await get_message_embedding(query_text)
+
+        # Формируем pipeline с использованием knnBeta для поиска по векторному полю
+        pipeline = [
+            {
+                "$search": {
+                    "index": "vector_idx",
+                    "knnBeta": {
+                        "vector": embedding,
+                        "path": "vectorized",
+                        "k": top_k
+                    }
+                }
+            },
+            {
+                "$project": {
+                    "_id": 0,
+                    "dialog_id": 1,
+                    "user": 1,
+                    "assistant": 1,
+                    "score": {"$meta": "searchScore"}
+                }
+            },
+            {"$limit": top_k}
+        ]
+
+        # Выполняем запрос
+        results = self.dialog_message_collection.aggregate(pipeline)
+        
+        # Собираем найденные записи
+        contexts = []
+        for doc in results:
+            # Формируем строку контекста из полей user и assistant
+            context_str = f"User: {doc.get('user', '')}\nAssistant: {doc.get('assistant', '')}"
+            contexts.append(context_str)
+
+        return contexts
+    
+
 
     def add_payment(
         self,

@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 RUN \
     set -eux; \
@@ -16,7 +16,7 @@ RUN \
     rm -rf /var/lib/apt/lists/*
 
 RUN pip3 install -U pip && pip3 install -U wheel && pip3 install -U setuptools>=68.0.0
-COPY ./requirements312.txt /tmp/requirements.txt
+COPY ./requirements.txt /tmp/requirements.txt
 RUN pip3 install -r /tmp/requirements.txt && rm -r /tmp/requirements.txt
 
 COPY . /code
