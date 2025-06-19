@@ -67,13 +67,13 @@ class ChatGPT:
         answer = None
         messages = self._prepare_messages(message, dialog_messages)
         assistant= await client.beta.assistants.retrieve(config.openai_api_assistant)
-        thread_id = db.get_dialog_attribute(user_id, "thread_id") 
+        thread_id = await db.get_dialog_attribute(user_id, "thread_id") 
         run_id = ''
         while answer is None:
             try:
                 if thread_id == '':
                     thread = await client.beta.threads.create()
-                    db.set_dialog_attribute(user_id, "thread_id", thread.id)
+                    await db.set_dialog_attribute(user_id, "thread_id", thread.id)
                     thread_id = thread.id
 
                 # List runs in the thread to detect an active one.
@@ -157,10 +157,10 @@ class ChatGPT:
             try:
                 messages = self._prepare_messages(message_in, dialog_messages)
                 # get_or_create thread 
-                thread_id = db.get_dialog_attribute(user_id, "thread_id") 
+                thread_id = await db.get_dialog_attribute(user_id, "thread_id") 
                 if thread_id == '':
                     thread = await client.beta.threads.create()
-                    db.set_dialog_attribute(user_id, "thread_id", thread.id)
+                    await db.set_dialog_attribute(user_id, "thread_id", thread.id)
                     thread_id = thread.id
 
                 message = await client.beta.threads.messages.create(

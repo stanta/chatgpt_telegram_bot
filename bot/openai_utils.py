@@ -76,7 +76,7 @@ class ChatGPT:
                 retries -= 1
                 try:
                     messages = self._generate_prompt_messages(config.chat_modes["assistant"]["prompt_resume"], dialog_messages, "assistant" )
-                    r = client.chat.completions.create(model=self.model,
+                    r = await client.chat.completions.create(model=self.model,
                     messages=messages,
                     **OPENAI_COMPLETION_OPTIONS)
                     answer = r.choices[0].message.content        
@@ -98,7 +98,7 @@ class ChatGPT:
                 if self.model in config.models['available_text_models'] and config.models['info'][self.model]['type'] == 'chat_completion' :
                     messages = self._generate_prompt_messages(message, dialog_messages, chat_mode)
 
-                    r = client.chat.completions.create(model=self.model,
+                    r = await client.chat.completions.create(model=self.model,
                     messages=messages,
                     **OPENAI_COMPLETION_OPTIONS)
                     answer = r.choices[0].message.content
@@ -142,7 +142,7 @@ class ChatGPT:
                 if self.model in config.models['available_text_models'] and config.models['info'][self.model]['type'] == 'chat_completion' :
                     messages = self._generate_prompt_messages(message, dialog_messages, chat_mode)
 
-                    r_gen = client.chat.completions.create(model=self.model,
+                    r_gen = await client.chat.completions.create(model=self.model,
                     # r_gen =  openai.ChatCompletion.create(
                         messages=messages,
                         stream=True,
@@ -247,7 +247,7 @@ class ChatGPT:
                     message, dialog_messages, chat_mode, image_buffer
                 )
 
-                r_gen = client.chat.completions.create(model="gpt-4o-mini", #self.model,
+                r_gen = await client.chat.completions.create(model="gpt-4o-mini", #self.model,
                 messages=messages,
                 stream=True,
                 **OPENAI_COMPLETION_OPTIONS)
@@ -425,9 +425,25 @@ async def is_content_acceptable(prompt):
 async def get_message_embedding(text, model="text-embedding-ada-002"):
     """
     Returns the embedding vector for a given text message, useful for RAG tasks.
+    Truncates text if it exceeds the model's token limit.
     """
-    result = await client.embeddings.create(model=model, input=text)
-    return result.data[0].embedding
+    # text-embedding-ada-002 has a max context length of 8192 tokens
+    max_tokens = 8000  # Leave some buffer
+    n_input_tokens = 0
+    
+    total_tokens = []
+    # Estimate tokens and truncate if necessary
+    estimated_tokens = len_in_tokens(text)
+    for slice_start in range(0, estimated_tokens, max_tokens):
+        slice_end = min(slice_start + max_tokens, estimated_tokens)
+        result = await client.embeddings.create(
+            model=model,
+            input=text[slice_start:slice_end]
+        )
+        n_input_tokens += result.usage.prompt_tokens
+        total_tokens.extend(result.data[0].embedding)
+        
+    return total_tokens, n_input_tokens
 
 
 # async def retrieve_context(query_text, context_texts, model="text-embedding-ada-002", top_k=3):

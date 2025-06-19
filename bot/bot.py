@@ -87,8 +87,8 @@ async def register_user_if_not_exists(
             context: CallbackContext, 
             user: User, 
             referral: int =None):
-    if not db.check_if_user_exists(user.id):
-        db.add_new_user(
+    if not await db.check_if_user_exists(user.id):
+        await db.add_new_user(
             user.id,
             update.message.chat_id,
             username=user.username,
@@ -96,19 +96,19 @@ async def register_user_if_not_exists(
             last_name= user.last_name, 
             referral= referral
         )
-        db.start_new_dialog(user.id)
+        await  db.start_new_dialog(user.id)
 
-    if db.get_user_attribute(user.id, "current_dialog_id") is None:
-        db.start_new_dialog(user.id)
+    if await  db.get_user_attribute(user.id, "current_dialog_id") is None:
+        await  db.start_new_dialog(user.id)
 
     if user.id not in user_semaphores:
         user_semaphores[user.id] = asyncio.Semaphore(1)
 
-    if db.get_user_attribute(user.id, "current_model") is None:
-        db.set_user_attribute(user.id, "current_model", config.models["available_text_models"][0])
+    if await  db.get_user_attribute(user.id, "current_model") is None:
+        await  db.set_user_attribute(user.id, "current_model", config.models["available_text_models"][0])
 
     # back compatibility for n_used_tokens field
-    n_used_tokens = db.get_user_attribute(user.id, "n_used_tokens")
+    n_used_tokens = await  db.get_user_attribute(user.id, "n_used_tokens")
     if isinstance(n_used_tokens, int) or isinstance(n_used_tokens, float):  # old format
         new_n_used_tokens = {
             "gpt-3.5-turbo": {
@@ -116,15 +116,15 @@ async def register_user_if_not_exists(
                 "n_output_tokens": n_used_tokens
             }
         }
-        db.set_user_attribute(user.id, "n_used_tokens", new_n_used_tokens)
+        await  db.set_user_attribute(user.id, "n_used_tokens", new_n_used_tokens)
 
     # voice message transcription
-    if db.get_user_attribute(user.id, "n_transcribed_seconds") is None:
-        db.set_user_attribute(user.id, "n_transcribed_seconds", 0.0)
+    if await  db.get_user_attribute(user.id, "n_transcribed_seconds") is None:
+        await  db.set_user_attribute(user.id, "n_transcribed_seconds", 0.0)
 
     # image generation
-    if db.get_user_attribute(user.id, "n_generated_images") is None:
-        db.set_user_attribute(user.id, "n_generated_images", 0)
+    if await  db.get_user_attribute(user.id, "n_generated_images") is None:
+        await  db.set_user_attribute(user.id, "n_generated_images", 0)
 
 
 async def is_bot_mentioned(update: Update, context: CallbackContext):
@@ -153,9 +153,9 @@ async def start_handle(update: Update, context: CallbackContext):
     await register_user_if_not_exists(update, context, update.message.from_user, referral = ref_id)
     user_id = update.message.from_user.id
 
-    db.set_user_attribute(user_id, "last_interaction", datetime.now())
-    db.set_user_attribute(user_id, "blocked", False)
-    db.start_new_dialog(user_id)
+    await  db.set_user_attribute(user_id, "last_interaction", datetime.now())
+    await  db.set_user_attribute(user_id, "blocked", False)
+    await  db.start_new_dialog(user_id)
 
     reply_text = t("Hi! I'm <b>ExamsCoach</b> bot🤖\n\n")
     reply_text += tt (HELP_MESSAGE, update.message.from_user.language_code) 
@@ -168,8 +168,8 @@ async def start_handle(update: Update, context: CallbackContext):
 async def help_handle(update: Update, context: CallbackContext):
     await register_user_if_not_exists(update, context, update.message.from_user)
     user_id = update.message.from_user.id
-    db.set_user_attribute(user_id, "last_interaction", datetime.now())
-    db.set_user_attribute(user_id, "blocked", False)
+    await db.set_user_attribute(user_id, "last_interaction", datetime.now())
+    await db.set_user_attribute(user_id, "blocked", False)
     await update.message.reply_text(tt(HELP_MESSAGE, update.message.from_user.language_code), parse_mode=ParseMode.HTML)
 
 
@@ -179,8 +179,8 @@ async def help_group_chat_handle(update: Update, context: CallbackContext):
 
      await register_user_if_not_exists(update, context, update.message.from_user)
      user_id = update.message.from_user.id
-     db.set_user_attribute(user_id, "last_interaction", datetime.now())
-     db.set_user_attribute(user_id, "blocked", False)
+     await db.set_user_attribute(user_id, "last_interaction", datetime.now())
+     await db.set_user_attribute(user_id, "blocked", False)
      
      h_g_c_m = tt( HELP_GROUP_CHAT_MESSAGE, update.message.from_user.language_code) 
      text = h_g_c_m.format(bot_username="@" + context.bot.username)
@@ -194,16 +194,16 @@ async def retry_handle(update: Update, context: CallbackContext):
     if await is_previous_message_not_answered_yet(update, context): return
 
     user_id = update.message.from_user.id
-    db.set_user_attribute(user_id, "last_interaction", datetime.now())
-    db.set_user_attribute(user_id, "blocked", False)    
-    pit_stop_message_number = db.get_dialog_attribute(user_id, key = "last_pit_stop_message_number")
-    dialog_messages = db.get_dialog_messages(user_id, dialog_id=None, message_start = pit_stop_message_number)
+    await db.set_user_attribute(user_id, "last_interaction", datetime.now())
+    await db.set_user_attribute(user_id, "blocked", False)    
+    pit_stop_message_number = await db.get_dialog_attribute(user_id, key = "last_pit_stop_message_number")
+    dialog_messages = await db.get_dialog_messages(user_id, dialog_id=None, message_start = pit_stop_message_number)
     if len(dialog_messages) == 0:
         await update.message.reply_text(t("No message to retry 🤷‍♂️"))
         return
 
     last_dialog_message = dialog_messages.pop()
-    db.set_dialog_messages(user_id, dialog_messages, dialog_id=None)  # last message was removed from the context
+    await db.set_dialog_messages(user_id, dialog_messages, dialog_id=None)  # last message was removed from the context
 
     await message_handle_fn(update, context, message=last_dialog_message)
 
@@ -222,16 +222,16 @@ async def _vision_message_handle_fn(
     #     )
     #     return
 
-    chat_mode = db.get_user_attribute(user_id, "current_chat_mode")
+    chat_mode = await db.get_user_attribute(user_id, "current_chat_mode")
 
     # new dialog timeout
     # if use_new_dialog_timeout:
-    #     if (datetime.now() - db.get_user_attribute(user_id, "last_interaction")).seconds > config.new_dialog_timeout and len(db.get_dialog_messages(user_id)) > 0:
-    #         # db.start_new_dialog(user_id)
+    #     if (datetime.now() - await db.get_user_attribute(user_id, "last_interaction")).seconds > config.new_dialog_timeout and len(await db.get_dialog_messages(user_id)) > 0:
+    #         # await db.start_new_dialog(user_id)
     #         # await update.message.reply_text(t("Starting new dialog due to timeout (<b>{chat_mode}</b> mode) ✅").format(chat_mode=config.chat_modes[chat_mode]['name']), parse_mode=ParseMode.HTML)
     #         await update.message.reply_text(t("Nice to see you again! Some time gone, want to start /new dialog (make new chat context, save tokens) or continue this chat (spend more tokens)"), parse_mode=ParseMode.HTML)
-    # db.set_user_attribute(user_id, "last_interaction", datetime.now())
-    # if not db.check_balance_positive(user_id):
+    # await db.set_user_attribute(user_id, "last_interaction", datetime.now())
+    # if not await db.check_balance_positive(user_id):
     #     await context.bot.send_message(
     #         chat_id=update.message.chat_id,
     #         text="No enough balance 🥲, /buy tokens to top up 😎",
@@ -261,7 +261,7 @@ async def _vision_message_handle_fn(
         # send typing action
         await update.message.chat.send_action(action="typing")
 
-        # dialog_messages = db.get_dialog_messages(user_id, dialog_id=None)
+        # dialog_messages = await db.get_dialog_messages(user_id, dialog_id=None)
         parse_mode = {"html": ParseMode.HTML, "markdown": ParseMode.MARKDOWN}[
             config.chat_modes[chat_mode]["parse_mode"]
         ]
@@ -347,13 +347,13 @@ async def _vision_message_handle_fn(
         else:
             new_dialog_message = {"user": [{"type": "text", "text": message}], "assistant": answer, "date": datetime.now()}
         
-        db.set_dialog_messages(
+        await db.set_dialog_messages(
             user_id,
-            db.get_dialog_messages(user_id, dialog_id=None) + [new_dialog_message],
+            await db.get_dialog_messages(user_id, dialog_id=None) + [new_dialog_message],
             dialog_id=None
         )
 
-        db.update_n_used_tokens(user_id, current_model, n_input_tokens, n_output_tokens)
+        await db.update_n_used_tokens(user_id, current_model, n_input_tokens, n_output_tokens)
         if update.message.caption is not None:
             answer = update.message.caption + " " + answer
         await message_handle_fn(update, context, message= answer)
@@ -361,7 +361,7 @@ async def _vision_message_handle_fn(
 
     except asyncio.CancelledError:
         # note: intermediate token updates only work when enable_message_streaming=True (config.yml)
-        db.update_n_used_tokens(user_id, current_model, n_input_tokens, n_output_tokens)
+        await db.update_n_used_tokens(user_id, current_model, n_input_tokens, n_output_tokens)
         raise
 
     except Exception as e:
@@ -380,8 +380,8 @@ async def message_handle_fn(update: Update, context: CallbackContext,  message: 
         user_id = update.message.from_user.id
 
             # Обновляем время последнего взаимодействия пользователя
-        chat_mode = db.get_user_attribute(user_id, "current_chat_mode")            
-        db.set_user_attribute(user_id, "last_interaction", datetime.now())
+        chat_mode = await db.get_user_attribute(user_id, "current_chat_mode")            
+        await db.set_user_attribute(user_id, "last_interaction", datetime.now())
 
         # Переменные для токенов (на случай отмены запроса)
         n_input_tokens, n_output_tokens = 0, 0
@@ -402,11 +402,11 @@ async def message_handle_fn(update: Update, context: CallbackContext,  message: 
                 )
                 return
             # Получаем номер последней точки "pit stop" (сохранения контекста)
-            last_pit_stop_message_number_in = db.get_dialog_attribute(user_id, key="last_pit_stop_message_number")
+            last_pit_stop_message_number_in = await db.get_dialog_attribute(user_id, key="last_pit_stop_message_number")
             last_pit_stop_message_number = int(last_pit_stop_message_number_in) if last_pit_stop_message_number_in is not None else 0
 
             # Получаем текущий список сообщений диалога
-            dialog_messages = db.get_dialog_messages(user_id, dialog_id=None, message_start = last_pit_stop_message_number )
+            dialog_messages = await db.get_dialog_messages(user_id, dialog_id=None, message_start = last_pit_stop_message_number )
             parse_mode = {
                 "html": ParseMode.HTML,
                 "markdown": ParseMode.MARKDOWN
@@ -496,12 +496,12 @@ async def message_handle_fn(update: Update, context: CallbackContext,  message: 
                 "assistant": answer,
                 "date": datetime.now()
             }
-            db.add_dialog_message(user_id, new_dialog_message, dialog_id=None)
+            await db.add_dialog_message(user_id, new_dialog_message, dialog_id=None)
 
             # Обновляем информацию по использованным токенам и балансу пользователя
-            db.update_n_used_tokens(user_id, current_model, n_input_tokens, n_output_tokens)
+            await db.update_n_used_tokens(user_id, current_model, n_input_tokens, n_output_tokens)
             # Если накопился достаточно большой контекст – добавляем промежуточное сообщение - резюме  
-            total_dialog_tokens= 0 if db.get_dialog_attribute(user_id, "n_used_tokens_dialog") is None  else int (db.get_dialog_attribute(user_id, "n_used_tokens_dialog"))
+            total_dialog_tokens= 0 if await db.get_dialog_attribute(user_id, "n_used_tokens_dialog") is None  else int (await db.get_dialog_attribute(user_id, "n_used_tokens_dialog"))
             if total_dialog_tokens > config.models['info'][current_model]['context_window_size'] * 0.9:
             # Передаём в ChatGPT контекст диалога, начиная с последней точки останова ч
                 pit_stop_message_number, answer = await chatgpt_instance.convolute_dialog(user_id, dialog_messages, last_pit_stop_message_number)
@@ -509,7 +509,7 @@ async def message_handle_fn(update: Update, context: CallbackContext,  message: 
                 
                 # Обновляем номер точки останова (забираем дополнительно 10 последних сообщений для контекста)
                 last_pit_stop_message_number = last_pit_stop_message_number + pit_stop_message_number - 10
-                db.set_dialog_attribute(user_id, key = "last_pit_stop_message_number", value = last_pit_stop_message_number)
+                await db.set_dialog_attribute(user_id, key = "last_pit_stop_message_number", value = last_pit_stop_message_number)
 
                 new_dialog_message = {
                     "user": [{"type": "text", "text": config.chat_modes["assistant"]["prompt_resume"]}],
@@ -517,13 +517,13 @@ async def message_handle_fn(update: Update, context: CallbackContext,  message: 
                     "date": datetime.now()
                 }
                 # Вместо перезаписи всего списка, добавляем новое сообщение
-                db.add_dialog_message(user_id, new_dialog_message, dialog_id=None)    
+                await db.add_dialog_message(user_id, new_dialog_message, dialog_id=None)    
                 # Сбрасываем счётчик использованных токенов
-                db.set_dialog_attribute(user_id, key = "n_used_tokens_dialog", value = 0)        
+                await db.set_dialog_attribute(user_id, key = "n_used_tokens_dialog", value = 0)        
 
         except asyncio.CancelledError:
             # При отмене обновляем токены и пробрасываем исключение
-            db.update_n_used_tokens(user_id, current_model, n_input_tokens, n_output_tokens)
+            await db.update_n_used_tokens(user_id, current_model, n_input_tokens, n_output_tokens)
             raise
 
         except Exception as e:
@@ -572,8 +572,8 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
     
     # Проверяем, достаточно ли у пользователя средств
     user_id = update.message.from_user.id
-    db.set_user_attribute(user_id, "blocked", False)
-    if not db.check_balance_positive(user_id):
+    await db.set_user_attribute(user_id, "blocked", False)
+    if not await db.check_balance_positive(user_id):
         await context.bot.send_message(
             chat_id=update.message.chat_id,
             text="No enough balance 🥲, /buy tokens to top up 😎",
@@ -597,7 +597,7 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
 
             # if current_model != "gpt-4o" and current_model != "gpt-4-vision-preview":
             #     current_model = "gpt-4o"
-            #     db.set_user_attribute(user_id, "current_model", "gpt-4o")
+            #     await db.set_user_attribute(user_id, "current_model", "gpt-4o")
             task = asyncio.create_task(
                 _vision_message_handle_fn(update, context)
             )
@@ -653,8 +653,8 @@ async def voice_message_handle(update: Update, context: CallbackContext):
     # if await is_previous_message_not_answered_yet(update, context): return
 
     user_id = update.message.from_user.id
-    db.set_user_attribute(user_id, "last_interaction", datetime.now())
-    if not db.check_balance_positive(user_id):
+    await db.set_user_attribute(user_id, "last_interaction", datetime.now())
+    if not await db.check_balance_positive(user_id):
         await context.bot.send_message(
             chat_id=update.message.chat_id,
             text="No enough balance 🥲, /buy tokens to top up 😎",
@@ -678,8 +678,8 @@ async def voice_message_handle(update: Update, context: CallbackContext):
     # update n_transcribed_seconds
     current_model = "o3-mini"
     tokens_per_second = config.models["info"][current_model]["tokens_per_second"]
-    db.set_user_attribute(user_id, "n_transcribed_seconds", voice.duration + db.get_user_attribute(user_id, "n_transcribed_seconds"))
-    db.update_n_used_tokens(user_id, current_model, 0, int(voice.duration * tokens_per_second))
+    await db.set_user_attribute(user_id, "n_transcribed_seconds", voice.duration + await db.get_user_attribute(user_id, "n_transcribed_seconds"))
+    await db.update_n_used_tokens(user_id, current_model, 0, int(voice.duration * tokens_per_second))
     if update.message.caption is not None:
             answer = update.message.caption + " " + answer
     await message_handle_fn(update, context, message= answer)
@@ -693,7 +693,7 @@ async def audio_message_handle(update: Update, context: CallbackContext):
     # if await is_previous_message_not_answered_yet(update, context): return
 
     user_id = update.message.from_user.id
-    db.set_user_attribute(user_id, "last_interaction", datetime.now())
+    await db.set_user_attribute(user_id, "last_interaction", datetime.now())
 
     audio = update.message.audio 
     if audio.file_size < 20*1024*1024:
@@ -722,8 +722,8 @@ async def audio_message_handle(update: Update, context: CallbackContext):
     # update n_transcribed_seconds
     current_model = "o3-mini"
     tokens_per_second = config.models["info"][current_model]["tokens_per_second"]
-    db.set_user_attribute(user_id, "n_transcribed_seconds", audio.duration + db.get_user_attribute(user_id, "n_transcribed_seconds"))
-    db.update_n_used_tokens(user_id, current_model, 0, int(audio.duration * tokens_per_second))
+    await db.set_user_attribute(user_id, "n_transcribed_seconds", audio.duration + await db.get_user_attribute(user_id, "n_transcribed_seconds"))
+    await db.update_n_used_tokens(user_id, current_model, 0, int(audio.duration * tokens_per_second))
     if update.message.caption is not None:
             answer = update.message.caption + " " + answer
     await message_handle_fn(update, context, message=answer)
@@ -737,7 +737,7 @@ async def textdoc_message_handle(update: Update, context: CallbackContext):
     # if await is_previous_message_not_answered_yet(update, context): return
 
     user_id = update.message.from_user.id
-    db.set_user_attribute(user_id, "last_interaction", datetime.now())
+    await db.set_user_attribute(user_id, "last_interaction", datetime.now())
 
     doc = update.message.document 
     if doc.file_size < 20*1024*1024:
@@ -762,7 +762,7 @@ async def textdoc_message_handle(update: Update, context: CallbackContext):
                 "assistant": "",
                 "date": datetime.now()
             }
-    db.add_dialog_message(user_id, new_dialog_message, dialog_id=None)
+    await db.add_dialog_message(user_id, new_dialog_message, dialog_id=None)
 
     await message_handle_fn(update, context, message=update.message.caption or "")
 
@@ -772,7 +772,7 @@ async def pdf_doc_message_handle(update: Update, context: CallbackContext):
         return
 
     user_id = update.message.from_user.id
-    db.set_user_attribute(user_id, "last_interaction", datetime.now())
+    await db.set_user_attribute(user_id, "last_interaction", datetime.now())
 
     doc = update.message.document 
     if doc.file_size < 20*1024*1024:
@@ -804,7 +804,7 @@ async def pdf_doc_message_handle(update: Update, context: CallbackContext):
                 "assistant": "",
                 "date": datetime.now()
             }
-    db.add_dialog_message(user_id, new_dialog_message, dialog_id=None)
+    await db.add_dialog_message(user_id, new_dialog_message, dialog_id=None)
             
     await message_handle_fn(
         update,
@@ -817,7 +817,7 @@ async def generate_image_handle(update: Update, context: CallbackContext, messag
     if await is_previous_message_not_answered_yet(update, context): return
 
     user_id = update.message.from_user.id
-    db.set_user_attribute(user_id, "last_interaction", datetime.now())
+    await db.set_user_attribute(user_id, "last_interaction", datetime.now())
 
     await update.message.chat.send_action(action="upload_photo")
 
@@ -834,7 +834,7 @@ async def generate_image_handle(update: Update, context: CallbackContext, messag
             raise
 
     # token usage
-    db.set_user_attribute(user_id, "n_generated_images", config.return_n_generated_images + db.get_user_attribute(user_id, "n_generated_images"))
+    await db.set_user_attribute(user_id, "n_generated_images", config.return_n_generated_images + await db.get_user_attribute(user_id, "n_generated_images"))
 
     for i, image_url in enumerate(image_urls):
         await update.message.chat.send_action(action="upload_photo")
@@ -846,17 +846,17 @@ async def new_dialog_handle(update: Update, context: CallbackContext):
     if await is_previous_message_not_answered_yet(update, context): return
 
     user_id = update.message.from_user.id
-    db.set_user_attribute(user_id, "last_interaction", datetime.now())
-    db.set_user_attribute(user_id, "blocked", False)
-    if db.get_user_attribute(user_id, "current_model") not in  config.models["available_text_models"]:
-        db.set_user_attribute(user_id,  "current_model",  config.models["available_text_models"][0] ) 
-    # db.set_user_attribute(user_id,  "locale", update.message.from_user.language_code ) 
-    db.start_new_dialog(user_id)
+    await db.set_user_attribute(user_id, "last_interaction", datetime.now())
+    await db.set_user_attribute(user_id, "blocked", False)
+    if await db.get_user_attribute(user_id, "current_model") not in  config.models["available_text_models"]:
+        await db.set_user_attribute(user_id,  "current_model",  config.models["available_text_models"][0] ) 
+    # await db.set_user_attribute(user_id,  "locale", update.message.from_user.language_code ) 
+    await db.start_new_dialog(user_id)
     locale =  update.message.from_user.language_code
     i18n.set('locale', locale)
     await update.message.reply_text(t("Starting new dialog ✅"))
 
-    chat_mode = db.get_user_attribute(user_id, "current_chat_mode")
+    chat_mode = await db.get_user_attribute(user_id, "current_chat_mode")
     welcome_message =  tt(config.chat_modes[chat_mode]['welcome_message'], locale) 
     await update.message.reply_text(f"{welcome_message}", parse_mode=ParseMode.HTML)
 
@@ -865,7 +865,7 @@ async def cancel_handle(update: Update, context: CallbackContext):
     await register_user_if_not_exists(update, context, update.message.from_user)
 
     user_id = update.message.from_user.id
-    db.set_user_attribute(user_id, "last_interaction", datetime.now())
+    await db.set_user_attribute(user_id, "last_interaction", datetime.now())
 
     if user_id in user_tasks:
         task = user_tasks[user_id]
@@ -916,7 +916,7 @@ async def show_chat_modes_handle(update: Update, context: CallbackContext):
     if await is_previous_message_not_answered_yet(update, context): return
 
     user_id = update.message.from_user.id
-    db.set_user_attribute(user_id, "last_interaction", datetime.now())
+    await db.set_user_attribute(user_id, "last_interaction", datetime.now())
 
     text, reply_markup = get_chat_mode_menu(0)
     await update.message.reply_text(text, reply_markup=reply_markup, parse_mode=ParseMode.HTML)
@@ -928,7 +928,7 @@ async def show_chat_modes_callback_handle(update: Update, context: CallbackConte
      if await is_previous_message_not_answered_yet(update.callback_query, context): return
 
      user_id = update.callback_query.from_user.id
-     db.set_user_attribute(user_id, "last_interaction", datetime.now())
+     await db.set_user_attribute(user_id, "last_interaction", datetime.now())
 
      query = update.callback_query
      await query.answer()
@@ -954,8 +954,8 @@ async def set_chat_mode_handle(update: Update, context: CallbackContext):
 
     chat_mode = query.data.split("|")[1]
 
-    db.set_user_attribute(user_id, "current_chat_mode", chat_mode)
-    db.start_new_dialog(user_id)
+    await db.set_user_attribute(user_id, "current_chat_mode", chat_mode)
+    await db.start_new_dialog(user_id)
     if update.message is not None:
         language_code = update.message.from_user.language_code
     elif update.callback_query is not None:
@@ -970,8 +970,8 @@ async def set_chat_mode_handle(update: Update, context: CallbackContext):
     )
 
 
-def get_settings_menu(user_id: int, update: Update):
-    current_model = db.get_user_attribute(user_id, "current_model")
+async def get_settings_menu(user_id: int, update: Update):
+    current_model = await db.get_user_attribute(user_id, "current_model")
     if current_model not in config.models["info"]:
         current_model = config.models["info"][0]
     if update.message is not None:
@@ -1010,9 +1010,9 @@ async def settings_handle(update: Update, context: CallbackContext):
     if await is_previous_message_not_answered_yet(update, context): return
 
     user_id = update.message.from_user.id
-    db.set_user_attribute(user_id, "last_interaction", datetime.now())
+    await db.set_user_attribute(user_id, "last_interaction", datetime.now())
 
-    text, reply_markup = get_settings_menu(user_id, update)
+    text, reply_markup = await get_settings_menu(user_id, update)
     await update.message.reply_text(text, reply_markup=reply_markup, parse_mode=ParseMode.HTML)
 
 
@@ -1025,8 +1025,8 @@ async def set_settings_handle(update: Update, context: CallbackContext):
     await query.answer()
 
     _, model_key = query.data.split("|")
-    db.set_user_attribute(user_id, "current_model", model_key)
-    # db.start_new_dialog(user_id)
+    await db.set_user_attribute(user_id, "current_model", model_key)
+    # await db.start_new_dialog(user_id)
 
     text, reply_markup = get_settings_menu(user_id, update)
     try:
@@ -1042,16 +1042,16 @@ async def show_balance_handle(update: Update, context: CallbackContext):
     await register_user_if_not_exists(update, context, update.message.from_user)
 
     user_id = update.message.from_user.id
-    db.set_user_attribute(user_id, "last_interaction", datetime.now())
+    await db.set_user_attribute(user_id, "last_interaction", datetime.now())
 
     # count total usage statistics
     total_n_spent_dollars = 0
     total_n_used_tokens = 0
 
-    n_used_tokens_dict = db.get_user_attribute(user_id, "n_used_tokens")
-    n_generated_images = db.get_user_attribute(user_id, "n_generated_images")
-    n_transcribed_seconds = db.get_user_attribute(user_id, "n_transcribed_seconds")
-    balance = db.get_user_attribute(user_id, "balance")
+    n_used_tokens_dict = await db.get_user_attribute(user_id, "n_used_tokens")
+    n_generated_images = await db.get_user_attribute(user_id, "n_generated_images")
+    n_transcribed_seconds = await db.get_user_attribute(user_id, "n_transcribed_seconds")
+    balance = await db.get_user_attribute(user_id, "balance")
     i18n.set('locale', update.message.from_user.language_code)
     details_text = t("🏷️ Details:\n")
     for model_key in sorted(n_used_tokens_dict.keys()):
@@ -1133,6 +1133,9 @@ async def check_inactivity_job(context: CallbackContext):
     await check_user_inactivity(context)
     
 async def post_init(application: Application):
+    # Initialize database indexes
+    await db.initialize_indexes()
+    
     await application.bot.set_my_commands([
         # BotCommand("/new", t("Start new dialog")),
         BotCommand("/buy", t("Buy bot tokens")),

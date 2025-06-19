@@ -22,7 +22,7 @@ async def check_is_blocked(bot, user_id):
     except Forbidden as e:
         logger.warning(f"User {user_id} appears to have blocked the bot: {e}")
         # Optionally update your database here to mark the user as blocked.
-        db.set_dialog_attribute(user_id, "blocked", True)
+        await db.set_user_attribute(user_id, "blocked", True)
         return True  # Bot is blocked.
     
 async def send_delayed_message(bot, chat_id, text, delay, user_id):
@@ -38,7 +38,7 @@ async def send_delayed_message(bot, chat_id, text, delay, user_id):
         # Бот заблокирован пользователем
         logger.warning(f"Bot blocked by user {user_id}: {e}")
         #TODO  Здесь можно обновить информацию в БД, отметив, что бот заблокирован        
-        db.set_user_attribute (user_id, "blocked", True)
+        await db.set_user_attribute(user_id, "blocked", True)
         
     except Exception as e:
         logger.info(f"Failed to send message to user {user_id} after delay: {e}")
@@ -48,10 +48,10 @@ async def check_user_inactivity(context: CallbackContext, threshold_minutes: int
     threshold = datetime.now() - timedelta(minutes=threshold_minutes)
     # Получаем всех пользователей, у которых last_interaction раньше порогового времени
     inactive_users = db.user_collection.find({"last_interaction": {"$lt": threshold}})    
-    for user in inactive_users:
+    async for user in inactive_users:
         answer = ""
         user_id = user["_id"]
-        if db.get_user_attribute(user_id, "blocked") == True:        
+        if await db.get_user_attribute(user_id, "blocked") == True:        
             continue   
         # if await check_is_blocked(context.bot, user_id):
         #     continue
@@ -67,7 +67,7 @@ async def check_user_inactivity(context: CallbackContext, threshold_minutes: int
             (answer, (n_input_tokens, n_output_tokens), _) = await chatgpt_instance.send_message(
                 config.chat_modes["assistant"]["prompt_continue"], user_id
             )
-            db.update_n_used_tokens(user_id, "gpt-4o-mini", int(n_input_tokens/7), int(n_output_tokens)/7) # учитываем оказанную консультацию, как и то, что gpt-4o-mini в 7 раз дешевле
+            await db.update_n_used_tokens(user_id, "gpt-4o-mini", int(n_input_tokens/7), int(n_output_tokens/7)) # учитываем оказанную консультацию, как и то, что gpt-4o-mini в 7 раз дешевле
             message_text = username + config.chat_modes["assistant"]["prompt_continue2"] + answer
 
         # Определяем задержку отправки:
@@ -90,6 +90,6 @@ async def check_user_inactivity(context: CallbackContext, threshold_minutes: int
                     "assistant": message_text,
                     "date": datetime.now() + timedelta(seconds=delay),
                 }
-        db.add_dialog_message(user_id, new_dialog_message, dialog_id=None)
+        await db.add_dialog_message(user_id, new_dialog_message, dialog_id=None)
         # Планируем нерBlocking отправку сообщения
         asyncio.create_task(send_delayed_message(context.bot, user["chat_id"], message_text, delay, user_id))

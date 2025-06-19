@@ -1,4 +1,4 @@
-from typing import Optional, Any
+from typing import Optional, Any, List, Decimal
 import pymongo
 import uuid
 import json
@@ -9,7 +9,7 @@ from openai_utils import get_message_embedding
 
 class Database:
     def __init__(self):
-        self.client = pymongo.MongoClient(config.mongodb_uri)        
+        self.client = pymongo.AsyncMongoClient(config.mongodb_uri)        
         self.db = self.client[config.project_name + "_db"]
 
         self.user_collection = self.db["user"]
@@ -18,20 +18,40 @@ class Database:
         self.dialog_message_collection = self.db["dialog_message"]
 
         # Создаём индексы для быстрого поиска по номеру и дате сообщений
-        self.dialog_message_collection.create_index(
-            [("dialog_id", pymongo.ASCENDING), ("message_number", pymongo.ASCENDING)],
-            unique=True
-        )
-        self.dialog_message_collection.create_index(
-            [("dialog_id", pymongo.ASCENDING), ("date", pymongo.ASCENDING)]
-        )
+        # Note: Index creation moved to async method since AsyncMongoClient requires await
+        # self.dialog_message_collection.create_index(
+        #     [("dialog_id", pymongo.ASCENDING), ("message_number", pymongo.ASCENDING)],
+        #     unique=True
+        # )
+        # self.dialog_message_collection.create_index(
+        #     [("dialog_id", pymongo.ASCENDING), ("date", pymongo.ASCENDING)]
+        # )
         
         # Добавляем коллекцию для платежей в __init__
         self.payments_collection = self.db["payments"]
-        self.payments_collection.create_index([("date", pymongo.ASCENDING)])
-        self.payments_collection.create_index([("currency", pymongo.ASCENDING)])\
-            
-    def create_vector_index_for_dialog_messages(self, dimensions=1536, collection_name="dialog_message"):
+        # self.payments_collection.create_index([("date", pymongo.ASCENDING)])
+        # self.payments_collection.create_index([("currency", pymongo.ASCENDING)])
+
+    async def initialize_indexes(self):
+        """
+        Initialize database indexes. Should be called once after creating Database instance.
+        """
+        # Create indexes for dialog messages
+        await self.dialog_message_collection.create_index(
+            [("dialog_id", pymongo.ASCENDING), ("message_number", pymongo.ASCENDING)],
+            unique=True
+        )
+        await self.dialog_message_collection.create_index(
+            [("dialog_id", pymongo.ASCENDING), ("date", pymongo.ASCENDING)]
+        )
+        
+        # Create indexes for payments
+        await self.payments_collection.create_index([("date", pymongo.ASCENDING)])
+        await self.payments_collection.create_index([("currency", pymongo.ASCENDING)])
+        await self.create_vector_index_for_dialog_messages()
+        
+
+    async def create_vector_index_for_dialog_messages(self, dimensions=1536, collection_name="dialog_message"):
         """
         Пример создания векторного индекса в MongoDB Atlas через 'createSearchIndexes'.
         Предполагается, что размерность эмбеддинга совпадает с 'dimensions'.
@@ -57,10 +77,10 @@ class Database:
                 }
             ]
         }
-        self.db.command(command)
+        await self.db.command(command)
 
-    def check_if_user_exists(self, user_id: int, raise_exception: bool = False):
-        if self.user_collection.count_documents({"_id": user_id}) > 0:
+    async def check_if_user_exists(self, user_id: int, raise_exception: bool = False):
+        if await self.user_collection.count_documents({"_id": user_id}) > 0:
             return True
         else:
             if raise_exception:
@@ -68,7 +88,7 @@ class Database:
             else:
                 return False
 
-    def add_new_user(
+    async def add_new_user(
         self,
         user_id: int,
         chat_id: int,
@@ -102,19 +122,19 @@ class Database:
             "last_pit_stop_message_number": 0,
         }
 
-        if not self.check_if_user_exists(user_id):
-            self.user_collection.insert_one(user_dict)
+        if not await self.check_if_user_exists(user_id):
+            await self.user_collection.insert_one(user_dict)
 
-    def start_new_dialog(self, user_id: int):
-        self.check_if_user_exists(user_id, raise_exception=True)
+    async def start_new_dialog(self, user_id: int):
+        await self.check_if_user_exists(user_id, raise_exception=True)
 
         dialog_id = str(uuid.uuid4())
         dialog_dict = {
             "_id": dialog_id,
             "user_id": user_id,
-            "chat_mode": self.get_user_attribute(user_id, "current_chat_mode"),
+            "chat_mode": await self.get_user_attribute(user_id, "current_chat_mode"),
             "start_time": datetime.now(),
-            "model": self.get_user_attribute(user_id, "current_model"),
+            "model": await self.get_user_attribute(user_id, "current_model"),
             "thread_id": "",
             # Старая логика – поле messages для обратной совместимости
             "messages": [],
@@ -124,47 +144,47 @@ class Database:
         }
 
         # Добавляем новый диалог
-        self.dialog_collection.insert_one(dialog_dict)
+        await self.dialog_collection.insert_one(dialog_dict)
 
         # Обновляем у пользователя текущий диалог
-        self.user_collection.update_one(
+        await self.user_collection.update_one(
             {"_id": user_id},
             {"$set": {"current_dialog_id": dialog_id}}
         )
 
         return dialog_id
     
-    def get_dialog_attribute(self, user_id,  key: str, dialog_id: str = ""):
+    async def get_dialog_attribute(self, user_id,  key: str, dialog_id: str = ""):
         if dialog_id == "":
-            dialog_id = self.get_user_attribute(user_id, "current_dialog_id")
-        dialog_dict = self.dialog_collection.find_one({"_id": dialog_id})
+            dialog_id = await self.get_user_attribute(user_id, "current_dialog_id")
+        dialog_dict = await self.dialog_collection.find_one({"_id": dialog_id})
         if key not in dialog_dict:
             return None
         return dialog_dict[key]
 
-    def get_user_attribute(self, user_id: int, key: str):
-        self.check_if_user_exists(user_id, raise_exception=True)
-        user_dict = self.user_collection.find_one({"_id": user_id})
+    async def get_user_attribute(self, user_id: int, key: str):
+        await self.check_if_user_exists(user_id, raise_exception=True)
+        user_dict = await self.user_collection.find_one({"_id": user_id})
 
         if key not in user_dict:
-            self.set_user_attribute(user_id, key, "")
+            await self.set_user_attribute(user_id, key, "")
             return None
 
         return user_dict[key]
 
-    def set_dialog_attribute(self, user_id: int,  key: str, value: Any, dialog_id: str =""):
+    async def set_dialog_attribute(self, user_id: int,  key: str, value: Any, dialog_id: str =""):
         if dialog_id == "":
-            dialog_id = self.get_user_attribute(user_id, "current_dialog_id")
-        self.dialog_collection.update_one({"_id": dialog_id}, {"$set": {key: value
+            dialog_id = await self.get_user_attribute(user_id, "current_dialog_id")
+        await self.dialog_collection.update_one({"_id": dialog_id}, {"$set": {key: value
         }})
         
-    def set_user_attribute(self, user_id: int, key: str, value: Any):
-        self.check_if_user_exists(user_id, raise_exception=True)
-        self.user_collection.update_one({"_id": user_id}, {"$set": {key: value}})
+    async def set_user_attribute(self, user_id: int, key: str, value: Any):
+        await self.check_if_user_exists(user_id, raise_exception=True)
+        await self.user_collection.update_one({"_id": user_id}, {"$set": {key: value}})
 
-    def update_n_used_tokens(self, user_id: int, model: str, n_input_tokens: int, n_output_tokens: int):
-        n_used_tokens_dict = self.get_user_attribute(user_id, "n_used_tokens")
-        bal_attr = self.get_user_attribute(user_id, "balance")
+    async def update_n_used_tokens(self, user_id: int, model: str, n_input_tokens: int, n_output_tokens: int):
+        n_used_tokens_dict = await self.get_user_attribute(user_id, "n_used_tokens")
+        bal_attr = await self.get_user_attribute(user_id, "balance")
         balance =  float(bal_attr) if bal_attr !="" else 0
         if model in n_used_tokens_dict:
             n_used_tokens_dict[model]["n_input_tokens"] += n_input_tokens
@@ -177,32 +197,32 @@ class Database:
         balance -= n_input_tokens
         balance -= n_output_tokens
 
-        self.set_user_attribute(user_id, "n_used_tokens", n_used_tokens_dict)
-        self.set_user_attribute(user_id, "balance", balance)
+        await self.set_user_attribute(user_id, "n_used_tokens", n_used_tokens_dict)
+        await self.set_user_attribute(user_id, "balance", balance)
         
-        n_used_tokens_dialog = 0 if self.get_dialog_attribute(user_id, "n_used_tokens_dialog") is None else self.get_dialog_attribute(user_id, "n_used_tokens_dialog")
+        n_used_tokens_dialog = 0 if await self.get_dialog_attribute(user_id, "n_used_tokens_dialog") is None else await self.get_dialog_attribute(user_id, "n_used_tokens_dialog")
         n_used_tokens_dialog = int(n_used_tokens_dialog) + n_input_tokens + n_output_tokens
         
-        self.set_user_attribute(user_id, "n_used_tokens", n_used_tokens_dict)
-        self.set_user_attribute(user_id, "balance", balance)
-        self.set_dialog_attribute(user_id, "n_used_tokens_dialog", n_used_tokens_dialog)
+        await self.set_user_attribute(user_id, "n_used_tokens", n_used_tokens_dict)
+        await self.set_user_attribute(user_id, "balance", balance)
+        await self.set_dialog_attribute(user_id, "n_used_tokens_dialog", n_used_tokens_dialog)
 
-    def check_balance_positive(self, user_id: int):
-        bal_attr = self.get_user_attribute(user_id, "balance")
+    async def check_balance_positive(self, user_id: int):
+        bal_attr = await self.get_user_attribute(user_id, "balance")
         balance =  float(bal_attr) if bal_attr !="" else 0
         return  int(balance) >= 0
 
-    def add_balance(self, 
+    async def add_balance(self, 
                     user_id: int, 
-                    params: [] ):#params currency, price, amount
+                    params: List[Any]):#params currency, price, amount
         currency, price, amount_tokens = params
-        balance = self.get_user_attribute(user_id, "balance")
+        balance = await self.get_user_attribute(user_id, "balance")
         if balance is None:
             balance = float(amount_tokens)  # обратная совместимость для старых пользователей
         else:
             balance += float(amount_tokens)
-        self.set_user_attribute(user_id, "balance", balance)
-        self.add_payment(
+        await self.set_user_attribute(user_id, "balance", balance)
+        await self.add_payment(
                 user_id, 
                 datetime.now(),
                 currency,
@@ -212,13 +232,13 @@ class Database:
         
     # ===== Новые методы работы с сообщениями диалога =====
 
-    def _migrate_legacy_messages(self, dialog_id: str):
+    async def _migrate_legacy_messages(self, dialog_id: str):
         """
         Если в диалоге ещё присутствуют сообщения в старом формате (хранятся в поле messages),
         они последовательно разбираются, сохраняются в новой коллекции с присвоением номера,
         а поле messages очищается. Это позволяет обеспечить бесшовную обратную совместимость.
         """
-        dialog_doc = self.dialog_collection.find_one({"_id": dialog_id})
+        dialog_doc = await self.dialog_collection.find_one({"_id": dialog_id})
         if not dialog_doc:
             return
 
@@ -252,14 +272,14 @@ class Database:
                     "assistant": assistant_str,
                     "date": msg_dict["date"]
                 }
-                self.dialog_message_collection.insert_one(new_msg_doc)
+                await self.dialog_message_collection.insert_one(new_msg_doc)
             # Обновляем диалог: очищаем legacy-сообщения и запоминаем последний номер
-            self.dialog_collection.update_one(
+            await self.dialog_collection.update_one(
                 {"_id": dialog_id},
                 {"$set": {"messages": [], "last_message_number": count}}
             )
 
-    def get_dialog_messages(
+    async def get_dialog_messages(
         self,
         user_id: int,
         dialog_id: Optional[str] = None,
@@ -273,13 +293,13 @@ class Database:
         Если заданы параметры диапазона по номеру или по дате, применяется соответствующий фильтр.
         Результат возвращается в том же формате, что и раньше – список JSON-строк.
         """
-        self.check_if_user_exists(user_id, raise_exception=True)
+        await self.check_if_user_exists(user_id, raise_exception=True)
 
         if dialog_id is None:
-            dialog_id = self.get_user_attribute(user_id, "current_dialog_id")
+            dialog_id = await self.get_user_attribute(user_id, "current_dialog_id")
 
         # Если есть legacy-сообщения – мигрируем их в новую коллекцию
-        self._migrate_legacy_messages(dialog_id)
+        await self._migrate_legacy_messages(dialog_id)
 
         query = {"dialog_id": dialog_id}
         if message_start is not None or message_end is not None:
@@ -300,8 +320,8 @@ class Database:
         # Выбираем сообщения, сортируя по возрастанию номера
         messages_cursor = self.dialog_message_collection \
             .find(query) \
-            .sort("message_number", pymongo.ASCENDING) \
-            .to_list()
+            .sort("message_number", pymongo.ASCENDING)
+        messages = await messages_cursor.to_list(length=None)
         # messages = []
         # for msg in messages_cursor:
         #     # Приводим сообщение к тому же формату, что использовался ранее
@@ -311,27 +331,27 @@ class Database:
         #         "date": msg["date"]
         #     }
         #     messages.append(msg_dict)
-        return messages_cursor
+        return messages
 
-    def set_dialog_messages(self, user_id: int, dialog_messages: list, dialog_id: Optional[str] = None):
+    async def set_dialog_messages(self, user_id: int, dialog_messages: list, dialog_id: Optional[str] = None):
         """
         Перезаписывает все сообщения диалога.
         Принимает список сообщений в старом формате (как JSON-строки или dict).
         Для обратной совместимости legacy-поле messages очищается, а все сообщения сохраняются
         в новой коллекции с последовательной нумерацией.
         """
-        self.check_if_user_exists(user_id, raise_exception=True)
+        await self.check_if_user_exists(user_id, raise_exception=True)
 
         if dialog_id is None:
-            dialog_id = self.get_user_attribute(user_id, "current_dialog_id")
+            dialog_id = await self.get_user_attribute(user_id, "current_dialog_id")
 
         # Очищаем legacy-поле
-        self.dialog_collection.update_one(
+        await self.dialog_collection.update_one(
             {"_id": dialog_id},
             {"$set": {"messages": []}}
         )
         # Удаляем все сообщения в новой коллекции для данного диалога
-        self.dialog_message_collection.delete_many({"dialog_id": dialog_id})
+        await self.dialog_message_collection.delete_many({"dialog_id": dialog_id})
 
         message_number = 0
         for msg in dialog_messages:
@@ -358,27 +378,27 @@ class Database:
                 "assistant": msg_dict["assistant"],
                 "date": msg_dict["date"]
             }
-            self.dialog_message_collection.insert_one(new_msg_doc)
+            await self.dialog_message_collection.insert_one(new_msg_doc)
 
         # Обновляем в диалоге последний номер сообщения
-        self.dialog_collection.update_one(
+        await self.dialog_collection.update_one(
             {"_id": dialog_id},
             {"$set": {"last_message_number": message_number}}
         )
 
-    def add_dialog_message(self, user_id: int, message: Any, dialog_id: Optional[str] = None):
+    async def add_dialog_message(self, user_id: int, message: Any, vectorized: Optional[list[Decimal]] = None, dialog_id: Optional[str] = None):
         """
         Добавляет одно сообщение в диалог с векторным хранением для MongoDB Atlas.
         """
-        self.check_if_user_exists(user_id, raise_exception=True)
+        await self.check_if_user_exists(user_id, raise_exception=True)
 
         if dialog_id is None:
-            dialog_id = self.get_user_attribute(user_id, "current_dialog_id")
+            dialog_id = await self.get_user_attribute(user_id, "current_dialog_id")
 
         # Мигрируем любые legacy-сообщения
-        # self._migrate_legacy_messages(dialog_id)
+        # await self._migrate_legacy_messages(dialog_id)
 
-        updated_dialog = self.dialog_collection.find_one_and_update(
+        updated_dialog = await self.dialog_collection.find_one_and_update(
             {"_id": dialog_id},
             {"$inc": {"last_message_number": 1}},
             return_document=pymongo.ReturnDocument.AFTER
@@ -406,7 +426,7 @@ class Database:
 
         # normalize assistant field
         assistant_text = str(msg_dict["assistant"])
-        vectorized =  get_message_embedding(user_text + " " + assistant_text)
+        vectorized = await get_message_embedding(user_text + " " + assistant_text)
         new_msg_doc = {
             "dialog_id":    dialog_id,
             "message_number": message_number,
@@ -415,7 +435,7 @@ class Database:
             "date":         msg_dict["date"],
             "vectorized":   vectorized
         }
-        self.dialog_message_collection.insert_one(new_msg_doc)
+        await self.dialog_message_collection.insert_one(new_msg_doc)
 
 
     # Метод get_dialog_messages (без дополнительных параметров) можно оставить для обратной совместимости,
@@ -468,7 +488,7 @@ class Database:
     
 
 
-    def add_payment(
+    async def add_payment(
         self,
         user_id: int,
         payment_date: datetime,
@@ -479,7 +499,7 @@ class Database:
         """
         Добавляет запись о платеже в базу данных
         """
-        self.check_if_user_exists(user_id, raise_exception=True)
+        await self.check_if_user_exists(user_id, raise_exception=True)
         
         payment_doc = {
             "user_id": user_id,
@@ -490,21 +510,24 @@ class Database:
         }
         
         # Вставляем запись в коллекцию платежей
-        self.payments_collection.insert_one(payment_doc)
+        await self.payments_collection.insert_one(payment_doc)
     
-    def get_payments(self, user_id:int):
-        payments_cursor = self.payments_collection.find({"user_id": user_id}).sort("date", pymongo.DESCENDING).to_list()        
-        return payments_cursor
+    async def get_payments(self, user_id:int):
+        payments_cursor = self.payments_collection.find({"user_id": user_id}).sort("date", pymongo.DESCENDING)
+        return await payments_cursor.to_list(length=None)
 
-    def get_referrals_number(self, ref_id):
-        return self.user_collection.count_documents({"referral": str(ref_id)})
+    async def get_referrals_number(self, ref_id):
+        return await self.user_collection.count_documents({"referral": str(ref_id)})
     
-    def get_referalls_purchases(self, ref_id:int):
+    async def get_referalls_purchases(self, ref_id:int):
         # Получаем пользователей с заданным referral
-        referrals = self.user_collection.find({"referral": str(ref_id)}).to_list(length=None)
+        referrals_cursor = self.user_collection.find({"referral": str(ref_id)})
+        referrals = await referrals_cursor.to_list(length=None)
         purchases = 0
         for ref in referrals:
             # Получаем платежи для каждого найденного пользователя
-            for pay in self.payments_collection.find({"user_id": ref["_id"]}):
+            payments_cursor = self.payments_collection.find({"user_id": ref["_id"]})
+            payments = await payments_cursor.to_list(length=None)
+            for pay in payments:
                 purchases += pay.get("amount_tokens", 0.0)
         return purchases

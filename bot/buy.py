@@ -134,7 +134,7 @@ async def button_handler(update: Update, context: CallbackContext) -> None:
     😇 PAYED SUCCESSFULLY ✅ 
                 """)
                         await query.edit_message_text(formatted_status, parse_mode=ParseMode.MARKDOWN)
-                        db.add_balance(update.effective_user.id,  params) #params currency, price, amount
+                        await db.add_balance(update.effective_user.id,  params) #params currency, price, amount
 
                     case "create_order_card_rf":
                         formatted_status = t(f"""
@@ -143,7 +143,7 @@ async def button_handler(update: Update, context: CallbackContext) -> None:
     😇 PAYED SUCCESSFULLY ✅ 
         """)
                         await query.edit_message_text(formatted_status, parse_mode=ParseMode.MARKDOWN)
-                        db.add_balance(update.effective_user.id,  params)
+                        await db.add_balance(update.effective_user.id,  params)
             else:
                 match action:
                     case "create_order":           

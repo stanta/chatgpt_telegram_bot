@@ -26,9 +26,9 @@ async def reflink_handler(update: Update, context: CallbackContext) -> None:
     # здесь вы можете генерировать идентификатор реферала на основе id пользователя
     ref_id = update.effective_user.id
     # bot_username = bot.get_me().username
-    referrals_number = db.get_referrals_number(ref_id)
-    referals_purchases = db.get_referalls_purchases(ref_id)
-    rewards = referals_purchases * config.reward_share  - float (db.get_user_attribute(ref_id, "withdrawn") or 0)
+    referrals_number = await db.get_referrals_number(ref_id)
+    referals_purchases = await db.get_referalls_purchases(ref_id)
+    rewards = referals_purchases * config.reward_share  - float (await db.get_user_attribute(ref_id, "withdrawn") or 0)
     ref_link = f"{context._application.bot.link}/?start={ref_id}"
 
     # создаем клавиатуру с кнопкой withdraw
@@ -51,8 +51,8 @@ async def reflink_handler(update: Update, context: CallbackContext) -> None:
 async def withdraw_handler(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_user.id
     # Получаем текущее значение withdrawn, если его ещё нет – считаем равным 0
-    current_withdrawn = float(db.get_user_attribute(user_id, "withdrawn") or 0)
-    referrals_purchases = db.get_referalls_purchases(user_id)
+    current_withdrawn = float(await db.get_user_attribute(user_id, "withdrawn") or 0)
+    referrals_purchases = await db.get_referalls_purchases(user_id)
     # Расчет доступной суммы для вывода
     available_reward = referrals_purchases * config.reward_share - current_withdrawn
 
@@ -62,8 +62,8 @@ async def withdraw_handler(update: Update, context: CallbackContext) -> None:
 
     # Увеличиваем withdrawn на сумму available_reward
     new_withdrawn = current_withdrawn + available_reward
-    db.set_user_attribute(user_id, "withdrawn", new_withdrawn)
-    db.add_balance(user_id, [ "tokens",1, available_reward])
+    await db.set_user_attribute(user_id, "withdrawn", new_withdrawn)
+    await db.add_balance(user_id, [ "tokens",1, available_reward])
     await update.callback_query.answer(t("Rewards withdrawn successfully"))
     await context.bot.send_message(
         chat_id=update.effective_chat.id,

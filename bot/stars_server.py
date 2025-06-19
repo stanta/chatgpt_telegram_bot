@@ -49,7 +49,7 @@ async def successful_payment_callback(update: Update, context: CallbackContext):
     payment = update.message.successful_payment
     telegram_payment_charge_id = payment.telegram_payment_charge_id
     params = json.loads(payment.invoice_payload)
-    db.add_balance(update.effective_user.id, params )
+    await db.add_balance(update.effective_user.id, params )
 
     await update.message.reply_text(t(f"Payment received ID: {telegram_payment_charge_id}"))
 
